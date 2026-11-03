@@ -75,7 +75,9 @@ h3{font-family:var(--display);font-weight:800;font-size:1.15rem;margin:0}
 .legend2 span{display:inline-flex;align-items:center;gap:4px}.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
 /* game top */
 .gtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.back{font:700 .92rem var(--body);background:none;border:0;color:var(--muted);cursor:pointer;padding:8px 0;min-height:44px}
+.back{display:inline-flex;align-items:center;gap:8px;font:700 1rem var(--body);background:var(--surface);border:2px solid var(--ink);color:var(--ink);cursor:pointer;padding:10px 18px;border-radius:999px;min-height:48px}
+.back:hover{background:var(--ink);color:var(--bg)}
+.back .arr{font-size:1.2rem;line-height:1}
 .timer{font:700 .95rem var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
 .result{display:flex;flex-direction:column;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:14px;width:100%}
 .big{font:800 2.6rem var(--display);line-height:1;font-variant-numeric:tabular-nums}
@@ -358,7 +360,7 @@ const renderResult = g => {
 };
 const renderTop = g => {
   const el = $(`.gtop[data-g="${g}"]`);
-  el.innerHTML = `<button type="button" class="back">← All puzzles</button><span class="timer"><span class="sr-only">Time: </span><span id="${g}Timer"></span></span>`;
+  el.innerHTML = `<button type="button" class="back"><span class="arr" aria-hidden="true">←</span>All puzzles</button><span class="timer"><span class="sr-only">Time: </span><span id="${g}Timer"></span></span>`;
   $('.back', el).addEventListener('click', () => show('today'));
   tick();
 };
@@ -688,7 +690,7 @@ const renderStats = () => {
     const w = W[P.cur], g = input.value;
     if (g.length < w.length) { st.textContent = `Fill in all ${w.length} letters first.`; st.className = 'status'; input.focus(); return; }
     P.tries[P.cur] = (P.tries[P.cur] ?? 0) + 1;
-    if (g === w) { st.textContent = `Yes! ${(W[P.cur - 1] + w).toLowerCase()} and ${(w + W[P.cur + 1]).toLowerCase()}.`; st.className = 'status win'; advance('a'); }
+    if (g === w) { st.textContent = `Yes! ${(W[P.cur - 1] + w).toLowerCase()}.`; st.className = 'status win'; advance('a'); }
     else {
       miss('cr');
       if (P.shown[P.cur] < w.length - 1) P.shown[P.cur]++;
