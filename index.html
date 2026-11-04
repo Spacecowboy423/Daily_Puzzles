@@ -17,7 +17,7 @@
   --tint:#e3e8f2; --silver:#7d879a; --bronze:#a8662f;
   --t1:#d93f3a; --t2:#2f6fd0; --t3:#d9a400; --t4:#0f8f8a;
   --a1:#1f8a57; --a1-ink:#ffffff; --a2:#f2c200; --a2-ink:#1b1206; --a3:#f08a24; --a3-ink:#1b1206;
-  --a4:#c8323d; --a4-ink:#ffffff; --hint:#7b4fd0; --hint-ink:#ffffff;
+  --a4:#c8323d; --a4-ink:#ffffff; --hint:#7b4fd0; --hint-ink:#ffffff; --block:#18213a;
   --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
   --body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,sans-serif;
   color-scheme:light;
@@ -26,7 +26,7 @@
   --bg:#11162a; --surface:#1b2240; --ink:#eef1fa; --muted:#a8b1cb; --line:#3a4570;
   --accent:#ff8a4c; --accent-ink:#1b1206; --good:#3cc58e; --bad:#ff6a74; --gold:#ffc53d;
   --tint:#262f55; --silver:#c3cad8; --bronze:#e0995c;
-  --t1:#ff6f68; --t2:#6aa5ff; --t3:#ffd23f; --t4:#3fd1c9; color-scheme:dark}}
+  --t1:#ff6f68; --t2:#6aa5ff; --t3:#ffd23f; --t4:#3fd1c9; --block:#04060d; color-scheme:dark}}
 body{margin:0;-webkit-tap-highlight-color:transparent;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
 [hidden]{display:none!important}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -59,6 +59,7 @@ h3{font-family:var(--display);font-weight:800;font-size:1.15rem;margin:0}
 .btn.small{padding:6px 14px;font-size:.88rem;min-height:38px}
 .btn:disabled{opacity:.45;cursor:default}
 .share{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;background:var(--tint);padding:12px 14px;border-radius:10px;font-size:.92rem;line-height:1.35;width:100%;user-select:text;-webkit-user-select:text;margin:0}
+.preview{background:color-mix(in srgb,var(--hint) 14%,var(--surface));border:1.5px solid var(--hint);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}.preview p{margin:0}.preview .btn{text-decoration:none;display:inline-flex;align-items:center}
 .note{font-size:.88rem;color:var(--muted);margin:0}
 /* hub */
 .games{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -82,7 +83,7 @@ h3{font-family:var(--display);font-weight:800;font-size:1.15rem;margin:0}
 .result{display:flex;flex-direction:column;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:14px;width:100%}
 .big{font:800 2.6rem var(--display);line-height:1;font-variant-numeric:tabular-nums}
 /* fault lines */
-#flSvg{width:100%;max-width:380px;height:auto;touch-action:manipulation;border-radius:8px}
+#flSvg{width:100%;max-width:380px;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;border-radius:8px}
 .edge{stroke:transparent;cursor:pointer}
 .legend{display:flex;gap:14px;font-size:.85rem;color:var(--muted);flex-wrap:wrap;justify-content:center}
 .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -109,6 +110,7 @@ h3{font-family:var(--display);font-weight:800;font-size:1.15rem;margin:0}
 .cell.on{background:color-mix(in srgb,var(--accent) 30%,var(--tint))}
 .cell.head{box-shadow:inset 0 0 0 3px var(--accent)}
 .cell.bad{background:color-mix(in srgb,var(--bad) 42%,var(--tint))}
+.cell .arrow{width:52%;height:52%;display:block}
 #pfSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 /* stack */
 .axis{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0}
@@ -120,7 +122,7 @@ h3{font-family:var(--display);font-weight:800;font-size:1.15rem;margin:0}
 .stack .item.dragging{z-index:5;cursor:grabbing;box-shadow:0 8px 22px rgba(0,0,0,.22);border-color:var(--accent)}
 .stack .item[aria-pressed="true"]{border-color:var(--accent);border-style:dashed}
 .stack .item.locked{background:var(--hint);color:var(--hint-ink);cursor:default}
-.stack .item.locked .grip{color:inherit}
+.stack .item.locked .grip,.stack .item.a1 .grip,.stack .item.a2 .grip,.stack .item.a3 .grip,.stack .item.a4 .grip,.stack .item.hinted .grip{color:inherit}
 .stack .item.a1{background:var(--a1);color:var(--a1-ink)}.stack .item.a2{background:var(--a2);color:var(--a2-ink)}
 .stack .item.a3{background:var(--a3);color:var(--a3-ink)}.stack .item.a4{background:var(--a4);color:var(--a4-ink)}
 .stack .item.hinted{background:var(--hint);color:var(--hint-ink)}
@@ -140,6 +142,49 @@ h3{font-family:var(--display);font-weight:800;font-size:1.15rem;margin:0}
 .tile span{font-size:.78rem;color:var(--muted)}
 .ramp{margin:0;padding-left:1.2em;color:var(--muted);font-size:.9rem;display:flex;flex-direction:column;gap:4px}
 .ramp b{color:var(--ink)}
+/* trial games */
+.play-area{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
+.tgrid{display:grid;gap:6px;width:100%;max-width:360px}
+.lamp{aspect-ratio:1;border-radius:12px;border:2px solid var(--line);background:var(--tint);cursor:pointer;padding:0;min-width:0}
+.lamp[aria-pressed="true"]{background:var(--t3);border-color:var(--t3);box-shadow:0 0 14px color-mix(in srgb,var(--t3) 55%,transparent)}
+.bgrid{display:grid;gap:6px;width:100%;max-width:340px;align-items:center}
+.bgrid input{width:100%;aspect-ratio:1;text-align:center;font:800 1.4rem var(--display);border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:0;min-width:0}
+.bgrid input.given{background:var(--tint);border-color:var(--tint)}
+.bgrid input.locked{border-color:var(--hint);background:color-mix(in srgb,var(--hint) 18%,var(--bg))}
+.bgrid input.dup{border-color:var(--bad);color:var(--bad)}
+.bsum{font:800 1rem var(--display);text-align:center;padding:6px 8px;border-radius:8px;background:var(--tint);color:var(--ink);font-variant-numeric:tabular-nums;min-width:2.4em}
+.bsum b{display:block;line-height:1.1}.bsum small{display:block;font-size:.72rem;font-weight:700;opacity:.9;line-height:1.1}
+.bsum.ok{background:var(--a1);color:var(--a1-ink)}.bsum.bad{background:var(--a4);color:var(--a4-ink)}
+.mmwrap{position:relative;width:100%;max-width:380px;aspect-ratio:1}
+.mmgrid{position:absolute;display:grid;gap:3px}
+.mcell{border-radius:6px;border:0;background:var(--tint);padding:0;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}
+.mcell svg{width:100%;height:100%;display:block}
+.mcell.block{background:var(--block);box-shadow:inset 0 0 0 2px var(--muted);cursor:default}
+.mmwrap>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.round{font-weight:700;color:var(--muted);margin:0}
+.ogrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;max-width:360px}
+.otile{aspect-ratio:1;border-radius:12px;border:2px solid var(--line);background:var(--surface);padding:6%;cursor:pointer;min-width:0}
+.otile svg{width:100%;height:100%;display:block}
+.otile.wrong{opacity:.35;border-color:var(--bad)}.otile.dim{opacity:.15}.otile.found{border-color:var(--good);box-shadow:0 0 0 3px var(--good)}
+/* road block */
+.rbboard{position:relative;width:100%;max-width:360px;aspect-ratio:1;background:var(--tint);border-radius:12px;box-shadow:inset 0 0 0 3px var(--line);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.rbcell{position:absolute;width:calc(100% / 6);height:calc(100% / 6);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--line) 60%,transparent)}
+.rbexit{position:absolute;right:-14px;width:14px;height:calc(100% / 6);display:flex;align-items:center;justify-content:center;background:var(--t1);color:#fff;font:800 1.2rem var(--display);border-radius:0 6px 6px 0}
+.rbcar{position:absolute;border:0;border-radius:10px;background:var(--car);cursor:grab;touch-action:none;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);padding:0}
+.rbcar.hero{box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 0 0 3px color-mix(in srgb,var(--t1) 35%,transparent)}
+.rbcar.dragging{cursor:grabbing;z-index:3;filter:brightness(1.08)}
+.rbboard:not(.won) .rbcar:not(.dragging){transition:left .12s,top .12s}
+.rbboard.won .rbcar.hero{animation:rbwin .6s ease-in-out}
+@keyframes rbwin{50%{transform:translateX(18px)}}
+/* color sort */
+.csrow{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:100%;max-width:420px}
+.bucket{display:flex;flex-direction:column;gap:3px;width:52px;padding:5px;border:2px solid var(--line);border-top:0;border-radius:0 0 16px 16px;background:var(--bg);cursor:pointer;transition:transform .12s}
+.bucket.sel{transform:translateY(-12px);border-color:var(--accent)}
+.bucket.full{border-color:var(--good)}
+.seg{display:flex;align-items:center;justify-content:center;height:36px;border-radius:6px;background:var(--c);color:#fff;font-size:.8rem;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.seg.empty{background:transparent}
+.bucket .seg:last-child{border-radius:6px 6px 12px 12px}
+@media (prefers-reduced-motion:reduce){.bucket,.rbcar{transition:none!important}}
 @media (prefers-reduced-motion:no-preference){.link,.cell,.gcard{transition:background .15s,border-color .15s}}
 @media (prefers-reduced-motion:reduce){.stack.sorting .item:not(.dragging){transition:none}}
 </style>
@@ -167,6 +212,8 @@ h3{font-family:var(--display);font-weight:800;font-size:1.15rem;margin:0}
     <h2 id="todayH" class="sr-only" tabindex="-1">Today's puzzles</h2>
     <p class="rules">Four new puzzles every day, easiest on Monday and hardest on Sunday. Each starts at <b>100 points</b>. Hints cost 15, and mistakes cost a few more. Finish all four to keep your streak going.</p>
     <div class="games" id="games"></div>
+    <div><h3>New games to try</h3><p class="note">Trial games. They have their own scores and share cards, but don't count toward the daily total or your streak.</p></div>
+    <div class="games" id="trialGames"></div>
     <div class="card" style="display:flex;flex-direction:column;gap:10px">
       <h3>Today's results</h3>
       <pre class="share" id="dailyShare"></pre>
@@ -263,8 +310,10 @@ const dayKey = off => { const d = new Date(NOW); d.setDate(d.getDate() - off); r
 const DAY = Math.round((Date.UTC(NOW.getFullYear(), NOW.getMonth(), NOW.getDate()) - Date.UTC(2026, 10, 1)) / 864e5);
 const NUM = DAY + 1;
 const DATE_LABEL = NOW.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+const DAYNAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const WEEKDAY = NOW.toLocaleDateString('en-US', { weekday: 'long' });
-const LVL = (NOW.getDay() + 6) % 7; // 0 = Monday ... 6 = Sunday
+const PREVIEW = (() => { const n = Number(new URLSearchParams(location.search).get('level')); return n >= 1 && n <= 7 ? n - 1 : null; })();
+const LVL = PREVIEW ?? (NOW.getDay() + 6) % 7; // 0 = Monday ... 6 = Sunday
 const LEVEL_NAMES = ['Easy', 'Easy+', 'Medium', 'Medium+', 'Hard', 'Harder', 'Expert'];
 const CFG = {
   fl: [{ n: 5, c: 2 }, { n: 6, c: 2 }, { n: 6, c: 3 }, { n: 7, c: 2 }, { n: 7, c: 3 }, { n: 8, c: 3 }, { n: 8, c: 4 }][LVL],
@@ -277,7 +326,7 @@ const rng = seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 
 const shuffle = (arr, r) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
 const seedFor = salt => (DAY + 10000) * 7919 + salt * 104729;
 
-const STORE_KEY = 'puzzlelab-v3';
+const STORE_KEY = PREVIEW === null ? 'puzzlelab-v3' : `puzzlelab-preview-${PREVIEW}`;
 const loadStore = () => {
   try {
     const s = JSON.parse(localStorage.getItem(STORE_KEY));
@@ -296,7 +345,14 @@ const GAMES = [
   { id: 'cr', name: 'Chain Reaction', icon: '🔗', miss: 5, free: 0 },
   { id: 'pf', name: 'Pathfinder', icon: '🧭', miss: 5, free: 0 },
   { id: 'sl', name: 'Stack Logic', icon: '📚', miss: 8, free: CFG.sl.free },
+  { id: 'ls', name: 'Light Switch', icon: '🔆', miss: 3, free: 0, trial: true },
+  { id: 'ba', name: 'Balance', icon: '🔢', miss: 5, free: 0, trial: true },
+  { id: 'mm', name: 'Mirror Maze', icon: '🔦', miss: 5, free: 1, trial: true },
+  { id: 'oo', name: 'Odd One Out', icon: '🔍', miss: 5, free: 0, trial: true },
+  { id: 'rb', name: 'Road Block', icon: '🚗', miss: 2, free: 0, trial: true },
+  { id: 'cs', name: 'Color Sort', icon: '🧪', miss: 3, free: 0, trial: true },
 ];
+const CORE = GAMES.filter(g => !g.trial);
 const GBY = Object.fromEntries(GAMES.map(g => [g.id, g]));
 const MAX_HINTS = 3;
 const fmtTime = s => `${Math.floor(s / 60)}:${pad(s % 60)}`;
@@ -388,26 +444,26 @@ setInterval(tick, 1000);
 
 // ================= Hub, daily card, streak, stats =================
 const renderHub = () => {
-  const box = $('#games'); box.innerHTML = '';
+  const box = $('#games'), tbox = $('#trialGames'); box.innerHTML = ''; tbox.innerHTML = '';
   GAMES.forEach(g => {
     const r = rec(g.id), b = document.createElement('button');
     b.type = 'button'; b.className = `gcard${r.done ? ' done' : ''}`;
     const status = r.done ? (r.ok ? 'Solved' : 'Out of tries') : r.start ? `In progress · ${plural(r.hints, 'hint')}, ${plural(r.misses, 'mistake')}` : g.blurb;
     b.innerHTML = `<span class="nm"><span aria-hidden="true">${g.icon}</span> ${g.name}</span><span class="st">${status}</span>${r.done ? `<span class="sc">${r.score} <span style="font-size:1rem">${r.ok ? starHTML(r.stars) : ''}</span></span>` : `<span class="play">${r.start ? 'Continue' : 'Play'}</span>`}`;
     b.addEventListener('click', () => show(g.id));
-    box.append(b);
+    (g.trial ? tbox : box).append(b);
   });
   $('#dailyShare').textContent = dailyText();
-  $('#dailyCopy').disabled = !GAMES.some(g => rec(g.id).done);
+  $('#dailyCopy').disabled = !CORE.some(g => rec(g.id).done);
 };
 const dailyText = () => {
   let tot = 0;
-  const lines = GAMES.map(g => { const r = rec(g.id); if (r.done) tot += r.score; return `${g.icon} ${r.done ? `${String(r.score).padStart(3, ' ')} ${g.strip(r)}` : '  —'}`; });
+  const lines = CORE.map(g => { const r = rec(g.id); if (r.done) tot += r.score; return `${g.icon} ${r.done ? `${String(r.score).padStart(3, ' ')} ${g.strip(r)}` : '  —'}`; });
   const st = streak().cur;
   return `Puzzle Lab #${NUM} · ${DATE_LABEL} · ${LEVEL_NAMES[LVL]}\n${lines.join('\n')}\nTotal ${tot}/400${st ? ` · 🔥 ${st}` : ''}`;
 };
 $('#dailyCopy').addEventListener('click', e => copy(dailyText(), e.currentTarget, $('#dailyShare')));
-const dayComplete = k => { const d = store.days[k]; return !!d && GAMES.every(g => d[g.id]?.done); };
+const dayComplete = k => { const d = store.days[k]; return !!d && CORE.every(g => d[g.id]?.done); };
 const streak = () => {
   let cur = 0, i = dayComplete(KEY) ? 0 : 1;
   while (dayComplete(dayKey(i))) { cur++; i++; }
@@ -421,7 +477,7 @@ const streak = () => {
 const renderStreak = () => { $('#streakPill').textContent = `🔥 ${streak().cur}-day streak`; };
 const renderStats = () => {
   const days = Object.values(store.days), s = streak();
-  const perfect = Object.keys(store.days).filter(k => dayComplete(k) && GAMES.every(g => store.days[k][g.id].stars === 3)).length;
+  const perfect = Object.keys(store.days).filter(k => dayComplete(k) && CORE.every(g => store.days[k][g.id].stars === 3)).length;
   $('#statTiles').innerHTML = `<div class="tile"><b>${s.cur}</b><span>Current streak</span></div><div class="tile"><b>${s.best}</b><span>Best streak</span></div><div class="tile"><b>${perfect}</b><span>Perfect days</span></div>`;
   let html = '<caption class="sr-only">Results by game</caption><tr><th scope="col">Game</th><th scope="col">Played</th><th scope="col">Avg</th><th scope="col">Best</th><th scope="col">3 stars</th></tr>';
   GAMES.forEach(g => {
@@ -438,7 +494,7 @@ const renderStats = () => {
   const svg = $('#flSvg'), st = $('#flStatus'), r0 = rng(seedFor(1));
   const TILE = ['red circle', 'blue square', 'yellow triangle', 'teal diamond'].slice(0, C);
   GBY.fl.blurb = `${N}×${N} grid · ${C} tile types`;
-  $('#flRules').innerHTML = `Tap the lines between squares to build walls. Split the grid into <b>${N} regions of ${N} squares</b>, each holding <b>exactly one of every tile</b> (${TILE.join(', ')}). Balanced regions turn green. A wrong Check costs 5.`;
+  $('#flRules').innerHTML = `<b>Drag across squares</b> to wall off a region, or tap a single line to add or remove one wall. Split the grid into <b>${N} regions of ${N} squares</b>, each holding <b>exactly one of every tile</b> (${TILE.join(', ')}). Balanced regions turn green. A wrong Check costs 5.`;
 
   // Random partition of the grid into N connected regions of N squares
   const inb = (a, b) => a >= 0 && b >= 0 && a < N && b < N;
@@ -515,7 +571,17 @@ const renderStats = () => {
   };
   const keyOfCells = cells => cells.map(c => c[0] * N + c[1]).sort((a, b) => a - b).join('.');
   const solKey = k => { const c = []; for (let r = 0; r < N; r++) for (let q = 0; q < N; q++) if (reg[r][q] === k) c.push([r, q]); return keyOfCells(c); };
-  const attOf = cells => { const k = keyOfCells(cells); if (R.prog.hintKeys.includes(k)) return 0; const i = R.prog.checks.findIndex(ch => ch.includes(k)); return i < 0 ? 1 : i + 1; };
+  const attOf = cells => {
+    const k = keyOfCells(cells); if (R.prog.hintKeys.includes(k)) return 0;
+    const mine = new Set(k.split('.'));
+    let tries = 1;
+    for (const ch of R.prog.checks) {
+      const okList = Array.isArray(ch) ? ch : ch.ok, badList = Array.isArray(ch) ? [] : ch.bad;
+      if (okList.includes(k)) break;
+      if (badList.some(b => b.split('.').some(x => mine.has(x)))) tries++;
+    }
+    return tries;
+  };
   const ok = cells => cells.length === SZ && TILE.every((_, i) => cells.filter(([r, c]) => tiles.get(r * N + c) === i).length === 1);
   const shapeEl = (ci, cx, cy, s) => {
     const fill = `var(--t${ci + 1})`;
@@ -527,7 +593,15 @@ const renderStats = () => {
   $('#flLegend').innerHTML = TILE.map(t => `<span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"></svg>${t}</span>`).join('') + '<span id="flCount"></span>';
   $$('#flLegend svg').forEach((s, i) => s.append(shapeEl(i, 7, 7, 5)));
 
-  let fi = null, focused = false;
+  let fi = null, focused = false, pointerFocus = false, edgeTap = null, paint = [], paintId = null;
+  const focusLine = el('line', { stroke: 'var(--accent)', 'stroke-width': 9, 'stroke-linecap': 'round', opacity: 0.55, 'pointer-events': 'none' });
+  const paintFocus = () => {
+    const e = EDGES[fi];
+    if (!focused || pointerFocus || !e) { focusLine.setAttribute('visibility', 'hidden'); return; }
+    ['x1', 'y1', 'x2', 'y2'].forEach(k => focusLine.setAttribute(k, e[k]));
+    focusLine.setAttribute('visibility', 'visible');
+    svg.append(focusLine);
+  };
   const draw = () => {
     svg.replaceChildren();
     const { id, list } = comps();
@@ -542,13 +616,13 @@ const renderStats = () => {
     svg.append(el('rect', { x: P, y: P, width: N * S, height: N * S, fill: 'none', stroke: 'var(--ink)', 'stroke-width': 4, rx: 6 }));
     EDGES.forEach((e, j) => {
       const on = walls.has(e.k);
-      if (focused && j === fi) svg.append(el('line', { x1: e.x1, y1: e.y1, x2: e.x2, y2: e.y2, stroke: 'var(--accent)', 'stroke-width': 9, 'stroke-linecap': 'round', opacity: 0.55 }));
       svg.append(el('line', { x1: e.x1, y1: e.y1, x2: e.x2, y2: e.y2, stroke: on ? 'var(--ink)' : 'var(--line)', 'stroke-width': on ? 5 : 1.5, 'stroke-dasharray': on ? '' : '3 4', 'stroke-linecap': 'round' }));
       const hit = el('line', { x1: e.x1, y1: e.y1, x2: e.x2, y2: e.y2, class: 'edge', 'stroke-width': Math.max(12, S * 0.42) });
-      hit.addEventListener('click', () => { fi = j; toggle(e.k, false); });
-      svg.append(hit);
+            svg.append(hit);
     });
     for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) svg.append(el('circle', { cx: P + c * S, cy: P + r * S, r: 2.6, fill: 'var(--muted)' }));
+    paint.forEach(cell => { const r = Math.floor(cell / N), c = cell % N; svg.append(el('rect', { x: P + c * S + 2, y: P + r * S + 2, width: S - 4, height: S - 4, rx: Math.min(8, S / 6), fill: 'var(--accent)', 'fill-opacity': 0.35, stroke: 'var(--accent)', 'stroke-width': 2, 'pointer-events': 'none' })); });
+    svg.append(focusLine); paintFocus();
     $('#flCount').textContent = plural(walls.size, 'wall');
   };
   const toggle = (k, viaKeys) => {
@@ -560,10 +634,69 @@ const renderStats = () => {
     st.className = 'status';
     st.textContent = viaKeys ? `Wall ${on ? 'removed' : 'added'} ${e.desc}.` : '';
   };
-  svg.addEventListener('focus', () => { focused = true; fi ??= 0; draw(); });
-  svg.addEventListener('blur', () => { focused = false; draw(); });
+  // Drag-to-draw: paint connected squares, then wall them off on release.
+  const toVB = (x, y) => new DOMPoint(x, y).matrixTransform(svg.getScreenCTM().inverse());
+  const cellAtPt = e => {
+    const p = toVB(e.clientX, e.clientY), fx = (p.x - P) / S, fy = (p.y - P) / S;
+    const c = Math.floor(fx), r = Math.floor(fy);
+    if (!inb(r, c)) return null;
+    const cand = [];
+    if (c > 0) cand.push([fx - c, `v${r},${c - 1}`]);
+    if (c < N - 1) cand.push([c + 1 - fx, `v${r},${c}`]);
+    if (r > 0) cand.push([fy - r, `h${r - 1},${c}`]);
+    if (r < N - 1) cand.push([r + 1 - fy, `h${r},${c}`]);
+    cand.sort((a, b) => a[0] - b[0]);
+    return { cell: r * N + c, edge: cand[0]?.[0] ?? 1, edgeKey: cand[0]?.[1] };
+  };
+  const adj = (a, b) => Math.abs(Math.floor(a / N) - Math.floor(b / N)) + Math.abs((a % N) - (b % N)) === 1;
+  svg.addEventListener('pointerdown', e => {
+    pointerFocus = true;
+    if (R.done || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const hit = cellAtPt(e);
+    if (!hit) return;
+    e.preventDefault();
+    edgeTap = hit.edge < 0.24 ? { key: hit.edgeKey, x: e.clientX, y: e.clientY, id: e.pointerId } : null;
+    paint = [hit.cell]; paintId = e.pointerId;
+  });
+  svg.addEventListener('pointermove', e => {
+    if (paintId !== e.pointerId) return;
+    const hit = cellAtPt(e);
+    if (edgeTap && Math.hypot(e.clientX - edgeTap.x, e.clientY - edgeTap.y) > 10) edgeTap = null;
+    if (!hit || hit.cell === paint[paint.length - 1]) return;
+    edgeTap = null;
+    if (paint.length === 1) { try { svg.setPointerCapture(e.pointerId); } catch { /* ignore */ } }
+    e.preventDefault();
+    if (paint.length > 1 && hit.cell === paint[paint.length - 2]) paint.pop();
+    else if (!paint.includes(hit.cell) && paint.some(x => adj(x, hit.cell))) paint.push(hit.cell);
+    else return;
+    st.className = 'status'; st.textContent = `${plural(paint.length, 'square')} selected`;
+    draw();
+  });
+  const endPaint = e => {
+    if (paintId !== e.pointerId) return;
+    const sel = new Set(paint); paint = []; paintId = null;
+    if (sel.size < 2) {
+      const tap = edgeTap; edgeTap = null;
+      if (tap && tap.id === e.pointerId) { fi = EDGES.findIndex(x => x.k === tap.key); toggle(tap.key, false); } else draw();
+      return;
+    }
+    EDGES.forEach(ed => {
+      const ia = sel.has(ed.a[0] * N + ed.a[1]), ib = sel.has(ed.b[0] * N + ed.b[1]);
+      if (ia !== ib) walls.add(ed.k); else if (ia && ib) walls.delete(ed.k);
+    });
+    persist(); draw();
+    const cells = [...sel].map(x => [Math.floor(x / N), x % N]);
+    st.className = 'status';
+    st.textContent = sel.size !== SZ ? `Region of ${sel.size} squares walled off. Regions need ${SZ}.` : ok(cells) ? `Region walled off and balanced.` : `Region walled off, but its tiles don't balance yet.`;
+  };
+  svg.addEventListener('pointerup', endPaint);
+  svg.addEventListener('pointercancel', e => { if (paintId === e.pointerId) { paint = []; paintId = null; edgeTap = null; draw(); } });
+  ['dragstart', 'selectstart', 'contextmenu'].forEach(t => svg.addEventListener(t, e => e.preventDefault()));
+  svg.addEventListener('focus', () => { focused = true; fi ??= 0; paintFocus(); });
+  svg.addEventListener('blur', () => { focused = false; pointerFocus = false; paintFocus(); });
   svg.addEventListener('keydown', e => {
     const dirs = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+    if (dirs[e.key] || e.key === ' ' || e.key === 'Enter') pointerFocus = false;
     if (dirs[e.key]) {
       e.preventDefault();
       const [dx, dy] = dirs[e.key], cur = EDGES[fi];
@@ -582,7 +715,7 @@ const renderStats = () => {
   $('#flCheck').addEventListener('click', () => {
     if (R.done) return;
     const { list } = comps();
-    R.prog.checks.push(list.filter(ok).map(keyOfCells)); save();
+    R.prog.checks.push({ ok: list.filter(ok).map(keyOfCells), bad: list.length > 1 ? list.filter(c => !ok(c)).map(keyOfCells) : [] }); save();
     if (list.length === N && list.every(ok)) { st.textContent = 'Solved! Every region balances.'; st.className = 'status win'; finish('fl', true); draw(); }
     else {
       miss('fl');
@@ -600,6 +733,7 @@ const renderStats = () => {
       const k = R.hints - 1;
       R.prog.hintKeys.push(solKey(k));
       solWallsOf(k).forEach(w => walls.add(w));
+      EDGES.forEach(e => { if (reg[e.a[0]][e.a[1]] === k && reg[e.b[0]][e.b[1]] === k) walls.delete(e.k); });
       persist(); draw();
       st.textContent = 'One full region drawn in for you.'; st.className = 'status';
     },
@@ -693,9 +827,10 @@ const renderStats = () => {
     if (g === w) { st.textContent = `Yes! ${(W[P.cur - 1] + w).toLowerCase()}.`; st.className = 'status win'; advance('a'); }
     else {
       miss('cr');
-      if (P.shown[P.cur] < w.length - 1) P.shown[P.cur]++;
+      const more = P.shown[P.cur] < w.length - 1;
+      if (more) P.shown[P.cur]++;
       save();
-      st.textContent = 'Not quite. Another letter revealed. −5'; st.className = 'status err';
+      st.textContent = more ? 'Not quite. Another letter revealed. −5' : 'Not quite. −5'; st.className = 'status err';
     }
     draw();
     if (!R.done) input?.focus();
@@ -745,8 +880,12 @@ const renderStats = () => {
   idx.filter(i => String(dir(i)) !== String(dir(i - 1))).slice(0, NA).forEach(i => arrows.set(SOL[i][0] * N + SOL[i][1], NAME(dir(i))));
   idx.filter(i => !arrows.has(SOL[i][0] * N + SOL[i][1]) && run(i) >= 2).slice(0, NM).forEach(i => nums.set(SOL[i][0] * N + SOL[i][1], run(i)));
   const D = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] }, SYM = { up: '↑', down: '↓', left: '←', right: '→' };
+  // One drawn arrow, rotated per direction, so all four look identical on every device.
+  const ROT = { right: 0, down: 90, left: 180, up: 270 };
+  const arrowSVG = d => `<svg class="arrow" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${ROT[d]}deg)"><path d="M4 12h14M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const board = $('#pfBoard'), grid = $('#pfGrid'), svgp = $('#pfSvg'), st = $('#pfStatus');
-  grid.style.gridTemplateColumns = `repeat(${N}, 1fr)`;
+  grid.style.gridTemplateColumns = `repeat(${N}, minmax(0, 1fr))`;
+  grid.style.gridTemplateRows = `repeat(${N}, minmax(0, 1fr))`;
   grid.style.fontSize = `${{ 5: 1.35, 6: 1.2, 7: 1.05, 8: 0.95 }[N]}rem`;
   const at2 = k => `row ${Math.floor(k / N) + 1} column ${(k % N) + 1}`;
   $('#pfClues').textContent = `Start at row ${START[0] + 1} column ${START[1] + 1}, end at row ${END[0] + 1} column ${END[1] + 1}. Clues: ${[...arrows].map(([k, d]) => `${at2(k)} leave ${d}`).concat([...nums].map(([k, n]) => `${at2(k)} go ${n} straight`)).join('; ')}.`;
@@ -759,7 +898,8 @@ const renderStats = () => {
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     const d = document.createElement('div'), k = r * N + c;
     d.className = 'cell';
-    d.textContent = same([r, c], START) ? 'S' : same([r, c], END) ? 'E' : arrows.has(k) ? SYM[arrows.get(k)] : nums.get(k) ?? '';
+    if (arrows.has(k)) d.innerHTML = arrowSVG(arrows.get(k));
+    else d.textContent = same([r, c], START) ? 'S' : same([r, c], END) ? 'E' : nums.get(k) ?? '';
     grid.append(d); cells.push(d);
   }
   const at = p => path.findIndex(q => same(p, q));
@@ -783,9 +923,11 @@ const renderStats = () => {
     if (R.done || !inb(p) || at(p) >= 0) return false;
     const h = head();
     if (Math.abs(h[0] - p[0]) + Math.abs(h[1] - p[1]) !== 1 || same(h, END)) return false;
-    const before = errs().size;
+    const was = errs();
     path = [...path, p];
-    if (errs().size > before) { miss('pf'); R.prog.chunk[chunkOf(path.length - 1)]++; }
+    R.prog.penal ??= [];
+    const fresh = [...errs()].filter(i => !was.has(i)).map(i => `${path[i]}|${path.slice(i).join(';')}`).filter(key => !R.prog.penal.includes(key));
+    if (fresh.length) { R.prog.penal.push(...fresh); miss('pf'); R.prog.chunk[chunkOf(path.length - 1)]++; }
     persist(); return true;
   };
   const backTo = i => { if (R.done || i < 0 || i >= path.length - 1) return; path = path.slice(0, i + 1); persist(); };
@@ -1033,10 +1175,587 @@ const renderStats = () => {
   draw();
 }
 
+// ================= Shared helpers for the new (trial) games =================
+const makeSection = (id, tag, title, extraBtns = '') => {
+  const sec = document.createElement('section');
+  sec.className = 'view'; sec.id = `v-${id}`; sec.hidden = true; sec.setAttribute('aria-labelledby', `${id}H`);
+  sec.innerHTML = `<div class="gtop" data-g="${id}"></div>
+    <div><p class="tag">${tag} · Trial</p><h2 id="${id}H" tabindex="-1">${title}</h2><p class="rules" id="${id}Rules"></p></div>
+    <div class="board"><div id="${id}Play" class="play-area"></div><p class="status" id="${id}Status" role="status"></p>
+    <div class="actions" id="${id}Btns"><button type="button" class="btn hb" data-g="${id}"></button>${extraBtns}</div>
+    <div class="result" data-g="${id}" hidden></div></div>`;
+  $('main').append(sec);
+  return sec;
+};
+// Arrow-key movement between buttons laid out in an N-wide grid
+const gridNav = (container, N, sel = 'button') => container.addEventListener('keydown', e => {
+  const k = { ArrowUp: -N, ArrowDown: N, ArrowLeft: -1, ArrowRight: 1 }[e.key];
+  if (k === undefined) return;
+  const items = [...container.querySelectorAll(sel)], i = items.indexOf(document.activeElement);
+  if (i < 0) return;
+  const j = i + k;
+  if ((e.key === 'ArrowLeft' && i % N === 0) || (e.key === 'ArrowRight' && i % N === N - 1) || j < 0 || j >= items.length) return;
+  e.preventDefault(); items[j].focus();
+});
+// Five-square strip for games scored on efficiency: hints first, then a color for how close to par you were
+const effStrip = (r, n = 5) => { const h = Math.min(r.hints, n), k = Math.min(r.misses, n - h); return HINT.repeat(h) + '🟩'.repeat(n - h - k) + '🟥'.repeat(k); };
+const setStatus = (el, text, cls = '') => { el.textContent = text; el.className = `status${cls ? ` ${cls}` : ''}`; };
+
+// ================= LIGHT SWITCH (trial) =================
+{
+  const id = 'ls', N = [4, 4, 5, 5, 6, 6, 7][LVL], K = [3, 4, 5, 6, 7, 8, 10][LVL], r0 = rng(seedFor(5));
+  GBY.ls.blurb = `${N}×${N} lights · par ${K}`;
+  makeSection(id, 'Logic', 'Light Switch', '<button type="button" class="btn" id="lsReset">Start over</button>');
+  $('#lsRules').innerHTML = `Tapping a light flips it <b>and its neighbors</b> above, below, left and right. <b>Turn every light off.</b> Par is ${K} taps, and each tap over par costs 3. Starting over keeps your tap count. A hint makes one correct tap for you.`;
+  const scramble = shuffle([...Array(N * N).keys()], r0).slice(0, K);
+  const flip = (s, i) => { const r = Math.floor(i / N), c = i % N; [[r, c], [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(([a, b]) => { if (a >= 0 && b >= 0 && a < N && b < N) s[a * N + b] ^= 1; }); };
+  const START = Array(N * N).fill(0); scramble.forEach(i => flip(START, i));
+  const R = rec(id); R.prog ??= { taps: [], count: 0 };
+  const P = R.prog, st = $('#lsStatus');
+  const state = () => { const s = [...START]; P.taps.forEach(i => flip(s, i)); return s; };
+  const needed = () => { const odd = new Set(); [...scramble, ...P.taps].forEach(i => { if (odd.has(i)) odd.delete(i); else odd.add(i); }); return [...odd]; };
+  const grid = document.createElement('div'); grid.className = 'tgrid'; grid.style.gridTemplateColumns = `repeat(${N}, minmax(0, 1fr))`;
+  grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'Lights. Use arrow keys to move and Enter to tap.');
+  const btns = [...Array(N * N)].map((_, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'lamp'; b.addEventListener('click', () => tap(i, false)); grid.append(b); return b; });
+  $('#lsPlay').append(grid); gridNav(grid, N);
+  const render = () => {
+    const s = state(), on = s.filter(Boolean).length;
+    btns.forEach((b, i) => { b.setAttribute('aria-pressed', String(!!s[i])); b.setAttribute('aria-label', `Row ${Math.floor(i / N) + 1} column ${(i % N) + 1}, ${s[i] ? 'on' : 'off'}`); b.setAttribute('aria-disabled', String(R.done)); });
+    if (R.done) { setStatus(st, `All lights off in ${plural(P.count, 'tap')} (par ${K}).`, 'win'); return; }
+    if (!on) { R.misses = Math.max(0, P.count - K); finish(id, true); render(); return; }
+    setStatus(st, `${plural(on, 'light')} on · ${plural(P.count, 'tap')} (par ${K})`);
+  };
+  const tap = (i, viaHint) => { if (R.done) return; P.taps.push(i); if (!viaHint) P.count++; save(); render(); };
+  $('#lsReset').addEventListener('click', () => { if (R.done) return; P.taps = []; save(); render(); });
+  handlers.ls = { hint() { const n = needed(); if (!n.length) return; tap(n[0], true); if (!R.done) setStatus(st, 'One correct light tapped for you.'); } };
+  GBY.ls.strip = r => effStrip(r);
+  render();
+}
+
+// ================= BALANCE (trial) =================
+{
+  const id = 'ba', N = [3, 3, 4, 4, 4, 5, 5][LVL], FR = [0.45, 0.35, 0.4, 0.3, 0.25, 0.3, 0.2][LVL], r0 = rng(seedFor(7));
+  GBY.ba.blurb = `${N}×${N} sums`;
+  makeSection(id, 'Numbers', 'Balance', '<button type="button" class="btn" id="baClear">Clear</button><button type="button" class="btn primary" id="baCheck">Check</button>');
+  $('#baRules').innerHTML = 'Fill each empty square with a digit from <b>1 to 9</b> so every row and column adds up to the total at its end. <b>No digit repeats</b> in a row or column. The small number under each total shows how far off that line is: <b>−3</b> means 3 short, <b>+2</b> means 2 over. Totals turn green when a full line is right. A wrong Check costs 5. A hint fills one square.';
+  let SOL = null;
+  for (let t = 0; t < 50 && !SOL; t++) {
+    const g = Array(N * N).fill(0);
+    const fill = k => {
+      if (k === N * N) return true;
+      const r = Math.floor(k / N), c = k % N;
+      for (const d of shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9], r0)) {
+        let free = true;
+        for (let j = 0; j < N; j++) if (g[r * N + j] === d || g[j * N + c] === d) { free = false; break; }
+        if (!free) continue;
+        g[k] = d; if (fill(k + 1)) return true; g[k] = 0;
+      }
+      return false;
+    };
+    if (fill(0)) SOL = g;
+  }
+  const rowOf = (v, r) => v.slice(r * N, r * N + N), colOf = (v, c) => [...Array(N)].map((_, r) => v[r * N + c]);
+  const sum = a => a.reduce((x, y) => x + y, 0);
+  const RS = [...Array(N)].map((_, r) => sum(rowOf(SOL, r))), CS = [...Array(N)].map((_, c) => sum(colOf(SOL, c)));
+  const GIVEN = new Set(shuffle([...Array(N * N).keys()], r0).slice(0, Math.max(1, Math.round(N * N * FR))));
+  const R = rec(id); R.prog ??= { vals: SOL.map((v, i) => (GIVEN.has(i) ? v : 0)), checks: [], locked: [] };
+  const P = R.prog, st = $('#baStatus');
+  const grid = document.createElement('div'); grid.className = 'bgrid'; grid.style.gridTemplateColumns = `repeat(${N}, minmax(0, 1fr)) auto`;
+  const inputs = [], rsEl = [], csEl = [];
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const i = r * N + c, inp = document.createElement('input');
+      Object.assign(inp, { type: 'text', inputMode: 'numeric', maxLength: 1, autocomplete: 'off' });
+      inp.setAttribute('aria-label', `Row ${r + 1} column ${c + 1}`);
+      inp.addEventListener('input', () => { inp.value = inp.value.replace(/[^1-9]/g, '').slice(-1); P.vals[i] = Number(inp.value) || 0; save(); paint(); });
+      inp.addEventListener('focus', () => inp.select());
+      grid.append(inp); inputs.push(inp);
+    }
+    const s = document.createElement('div'); s.className = 'bsum'; grid.append(s); rsEl.push(s);
+  }
+  for (let c = 0; c < N; c++) { const s = document.createElement('div'); s.className = 'bsum'; grid.append(s); csEl.push(s); }
+  grid.append(document.createElement('div'));
+  $('#baPlay').append(grid);
+  gridNav(grid, N, 'input');
+  const lineState = (vals, target) => { const full = vals.every(Boolean), tot = sum(vals), dup = new Set(vals.filter(Boolean)).size !== vals.filter(Boolean).length; return { tot, okk: full && tot === target && !dup, bad: tot > target || (full && tot !== target) || dup }; };
+  const paint = () => {
+    const dups = new Set();
+    for (let k = 0; k < N; k++) {
+      [[...Array(N)].map((_, j) => k * N + j), [...Array(N)].map((_, j) => j * N + k)].forEach(idx => {
+        idx.forEach(a => idx.forEach(b => { if (a !== b && P.vals[a] && P.vals[a] === P.vals[b]) dups.add(a); }));
+      });
+    }
+    inputs.forEach((inp, i) => {
+      const fixed = GIVEN.has(i) || P.locked.includes(i);
+      if (String(P.vals[i] || '') !== inp.value) inp.value = P.vals[i] || '';
+      inp.readOnly = fixed || R.done;
+      inp.className = `${GIVEN.has(i) ? 'given' : P.locked.includes(i) ? 'locked' : ''}${dups.has(i) ? ' dup' : ''}`;
+    });
+    [[rsEl, RS, rowOf, 'Row'], [csEl, CS, colOf, 'Column']].forEach(([els, T, get, name]) => els.forEach((el, k) => {
+      const s = lineState(get(P.vals, k), T[k]);
+      const dlt = s.tot - T[k], any = get(P.vals, k).some(Boolean);
+      const tag = !any ? '&nbsp;' : s.okk ? '✓' : dlt < 0 ? `−${-dlt}` : dlt > 0 ? `+${dlt}` : '±0';
+      el.innerHTML = `<b>${T[k]}</b><small>${tag}</small>`; el.className = `bsum${s.okk ? ' ok' : s.bad ? ' bad' : ''}`;
+      el.setAttribute('aria-label', `${name} ${k + 1} total ${T[k]}, currently ${s.tot}${s.okk ? ', correct' : dlt < 0 ? `, ${-dlt} short` : dlt > 0 ? `, ${dlt} over` : ''}`);
+    }));
+  };
+  const solved = () => [...Array(N)].every((_, k) => lineState(rowOf(P.vals, k), RS[k]).okk && lineState(colOf(P.vals, k), CS[k]).okk);
+  $('#baCheck').addEventListener('click', () => {
+    if (R.done) return;
+    if (P.vals.some(v => !v)) { setStatus(st, 'Fill every square first.'); return; }
+    if (solved()) { setStatus(st, 'Balanced! Every row and column adds up.', 'win'); finish(id, true); paint(); return; }
+    P.checks.push([...Array(N)].map((_, r) => lineState(rowOf(P.vals, r), RS[r]).okk)); miss(id); save();
+    const badLines = [...Array(N)].filter((_, k) => !lineState(rowOf(P.vals, k), RS[k]).okk).length + [...Array(N)].filter((_, k) => !lineState(colOf(P.vals, k), CS[k]).okk).length;
+    setStatus(st, `${plural(badLines, 'row or column', 'rows or columns')} not right yet. −5`, 'err');
+  });
+  $('#baClear').addEventListener('click', () => { if (R.done) return; P.vals = P.vals.map((v, i) => (GIVEN.has(i) || P.locked.includes(i) ? v : 0)); save(); paint(); setStatus(st, 'Cleared.'); });
+  handlers.ba = {
+    hint() {
+      const open = [...Array(N * N).keys()].filter(i => !GIVEN.has(i) && !P.locked.includes(i) && P.vals[i] !== SOL[i]);
+      const i = open.find(k => P.vals[k]) ?? open[0];
+      if (i === undefined) return;
+      P.vals[i] = SOL[i]; P.locked.push(i); save(); paint();
+      setStatus(st, `Row ${Math.floor(i / N) + 1}, column ${(i % N) + 1} is ${SOL[i]}.`);
+      if (P.vals.every(Boolean) && solved()) { setStatus(st, 'Balanced! Every row and column adds up.', 'win'); finish(id, true); paint(); }
+    },
+  };
+  GBY.ba.strip = r => [...Array(N)].map((_, row) => {
+    if (r.prog.locked.some(i => Math.floor(i / N) === row)) return HINT;
+    const k = r.prog.checks.findIndex(ch => ch[row]);
+    return ATT((k < 0 ? r.prog.checks.length : k) + 1);
+  }).join('');
+  if (R.done) setStatus(st, 'Balanced! Every row and column adds up.', 'win');
+  paint();
+}
+
+// ================= MIRROR MAZE (trial) =================
+{
+  const id = 'mm', N = [5, 5, 6, 6, 7, 7, 8][LVL], M = [2, 2, 3, 3, 4, 4, 5][LVL], T = [2, 2, 3, 3, 3, 4, 4][LVL], B = [0, 1, 1, 2, 2, 3, 4][LVL], r0 = rng(seedFor(8));
+  GBY.mm.blurb = `${N}×${N} · ${plural(M, 'mirror')}`;
+  makeSection(id, 'Spatial', 'Mirror Maze', '<button type="button" class="btn" id="mmClear">Clear mirrors</button><button type="button" class="btn primary" id="mmFire">Fire laser</button>');
+  $('#mmRules').innerHTML = `A laser enters from the left. Tap a square to place a mirror, tap again to flip it, and a third time to remove it. Place up to <b>${M} mirrors</b> freely, then press <b>Fire laser</b>. You win when the beam passes through <b>every target</b> and leaves by the <b>exit</b>. Dark blocks stop the beam. Your first missed shot is free; each one after that costs 5.`;
+  const DV = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+  const turn = (t, d) => (t === '/' ? [1, 0, 3, 2] : [3, 2, 1, 0])[d];
+  let SOL = null, ENTRY = 0, EXIT = null, TARGETS = new Set(), BLOCK = new Set();
+  for (let t = 0; t < 2000 && !SOL; t++) {
+    const er = Math.floor(r0() * N); let r = er, c = -1, d = 1, okp = true;
+    const vis = new Set(), mir = new Map(), path = [];
+    for (let m = 0; m < M && okp; m++) {
+      const steps = 1 + Math.floor(r0() * (N - 1));
+      for (let s = 0; s < steps; s++) { r += DV[d][0]; c += DV[d][1]; if (r < 0 || c < 0 || r >= N || c >= N || vis.has(r * N + c)) { okp = false; break; } vis.add(r * N + c); path.push(r * N + c); }
+      if (!okp) break;
+      const ty = r0() < 0.5 ? '/' : '\\'; mir.set(r * N + c, ty); d = turn(ty, d);
+    }
+    if (!okp) continue;
+    for (;;) { const nr = r + DV[d][0], nc = c + DV[d][1]; if (nr < 0 || nc < 0 || nr >= N || nc >= N) break; r = nr; c = nc; if (vis.has(r * N + c)) { okp = false; break; } vis.add(r * N + c); path.push(r * N + c); }
+    if (!okp) continue;
+    const firstMirror = path.findIndex(k => mir.has(k));
+    const plain = path.filter((k, i) => !mir.has(k) && i > firstMirror); // targets only after the first bounce
+    if (plain.length < T + 1 || (d === 3 && c === 0)) continue;
+    SOL = mir; ENTRY = er; EXIT = { r, c, d };
+    TARGETS = new Set(shuffle(plain, r0).slice(0, T));
+    BLOCK = new Set(shuffle([...Array(N * N).keys()].filter(k => !vis.has(k)), r0).slice(0, B));
+  }
+  const sim = map => {
+    let r = ENTRY, c = -1, d = 1, out = null, blocked = false;
+    const cells = new Set(), pts = [[r, c]];
+    for (let s = 0; s < 4 * N * N; s++) {
+      r += DV[d][0]; c += DV[d][1];
+      if (r < 0 || c < 0 || r >= N || c >= N) { out = { r: r - DV[d][0], c: c - DV[d][1], d }; pts.push([r, c]); break; }
+      const k = r * N + c;
+      if (BLOCK.has(k)) { blocked = true; pts.push([r, c]); break; }
+      cells.add(k);
+      const m = map.get(k); if (m) { pts.push([r, c]); d = turn(m, d); }
+    }
+    if (!out && !blocked) pts.push([r, c]);
+    return { cells, pts, out, blocked };
+  };
+  const R = rec(id); R.prog ??= { mir: [], toggles: 0, locked: [] }; R.prog.shots ??= []; R.prog.fired ??= false;
+  const P = R.prog, st = $('#mmStatus');
+  const mirMap = () => new Map(P.mir);
+  const wrap = document.createElement('div'); wrap.className = 'mmwrap';
+  const gridEl = document.createElement('div'); gridEl.className = 'mmgrid';
+  const inset = `calc(100% / ${N + 2})`;
+  Object.assign(gridEl.style, { top: inset, left: inset, right: inset, bottom: inset, gridTemplateColumns: `repeat(${N}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${N}, minmax(0, 1fr))` });
+  gridEl.setAttribute('role', 'group'); gridEl.setAttribute('aria-label', 'Mirror grid. Use arrow keys to move and Enter to place or flip a mirror.');
+  const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); overlay.setAttribute('viewBox', `0 0 ${N + 2} ${N + 2}`); overlay.setAttribute('aria-hidden', 'true');
+  const cellsEl = [...Array(N * N)].map((_, k) => { const b = document.createElement('button'); b.type = 'button'; b.className = `mcell${BLOCK.has(k) ? ' block' : ''}`; b.addEventListener('click', () => tapCell(k)); gridEl.append(b); return b; });
+  wrap.append(gridEl, overlay); $('#mmPlay').append(wrap); gridNav(gridEl, N);
+  const outCell = { r: EXIT.r + DV[EXIT.d][0], c: EXIT.c + DV[EXIT.d][1] };
+  const render = () => {
+    const map = mirMap(), b = sim(map), show = P.fired || R.done, hit = show ? [...TARGETS].filter(k => b.cells.has(k)).length : 0;
+    const exitOk = b.out && b.out.r === EXIT.r && b.out.c === EXIT.c && b.out.d === EXIT.d;
+    cellsEl.forEach((el, k) => {
+      const m = map.get(k), tgt = TARGETS.has(k), lit = show && tgt && b.cells.has(k), lk = P.locked.includes(k);
+      let inner = '';
+      if (m) inner = `<svg viewBox="0 0 10 10" aria-hidden="true"><line x1="${m === '/' ? 1.5 : 1.5}" y1="${m === '/' ? 8.5 : 1.5}" x2="8.5" y2="${m === '/' ? 1.5 : 8.5}" stroke="${lk ? 'var(--hint)' : 'var(--ink)'}" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+      else if (tgt) inner = `<svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="2.6" fill="${lit ? 'var(--t3)' : 'none'}" stroke="var(--t3)" stroke-width="1.1"/></svg>`;
+      el.innerHTML = inner;
+      el.setAttribute('aria-label', `Row ${Math.floor(k / N) + 1} column ${(k % N) + 1}${BLOCK.has(k) ? ', block' : ''}${tgt ? `, target${lit ? ' lit' : ''}` : ''}${m ? `, mirror ${m === '/' ? 'slanting up' : 'slanting down'}${lk ? ', locked' : ''}` : ''}`);
+      el.setAttribute('aria-disabled', String(R.done || BLOCK.has(k) || tgt || lk));
+    });
+    const pts = b.pts.map(([r, c]) => `${c + 1.5},${r + 1.5}`).join(' ');
+    overlay.innerHTML = `${show ? '' : '<!--'}<polyline points="${pts}" fill="none" stroke="var(--t1)" stroke-width="${0.12}" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>${show ? '' : '-->'}
+      <g fill="var(--t1)"><rect x="0.15" y="${ENTRY + 1.2}" width="0.75" height="0.6" rx="0.12"/></g>
+      <g><rect x="${outCell.c + 1.2}" y="${outCell.r + 1.2}" width="0.6" height="0.6" rx="0.12" fill="${show && exitOk ? 'var(--good)' : 'none'}" stroke="var(--good)" stroke-width="0.1"/></g>`;
+    if (R.done) { setStatus(st, 'Every target lit and out the exit!', 'win'); return; }
+    if (!P.fired) setStatus(st, `${plural(M - map.size, 'mirror')} left · press Fire laser to test`);
+  };
+  const fire = () => {
+    if (R.done) return;
+    const map = mirMap(), b = sim(map), hit = [...TARGETS].filter(k => b.cells.has(k)).length;
+    const exitOk = b.out && b.out.r === EXIT.r && b.out.c === EXIT.c && b.out.d === EXIT.d;
+    P.fired = true;
+    if (hit === T && exitOk && !b.blocked) { P.shots.push('w'); save(); setStatus(st, 'Every target lit and out the exit!', 'win'); finish(id, true); render(); return; }
+    P.shots.push('x'); miss(id); save();
+    const why = b.blocked ? 'the beam hit a block' : hit < T ? `${hit} of ${T} targets lit` : 'every target lit, but the beam missed the exit';
+    setStatus(st, `Missed: ${why}.${R.misses > 1 ? ' −5' : ' First miss is free.'}`, 'err');
+    render();
+  };
+  $('#mmFire').addEventListener('click', fire);
+  const tapCell = k => {
+    if (R.done || BLOCK.has(k) || TARGETS.has(k) || P.locked.includes(k)) return;
+    const map = mirMap(), m = map.get(k);
+    if (!m && map.size >= M) { setStatus(st, `All ${M} mirrors are placed. Remove one first.`); return; }
+    if (!m) map.set(k, '/'); else if (m === '/') map.set(k, '\\'); else map.delete(k);
+    P.mir = [...map]; P.toggles++; P.fired = false; save(); render();
+  };
+  $('#mmClear').addEventListener('click', () => { if (R.done) return; P.mir = P.mir.filter(([k]) => P.locked.includes(k)); P.fired = false; save(); render(); });
+  handlers.mm = {
+    hint() {
+      const map = mirMap();
+      const k = [...SOL.keys()].find(x => map.get(x) !== SOL.get(x) && !P.locked.includes(x));
+      if (k === undefined) return;
+      map.set(k, SOL.get(k)); P.locked.push(k);
+      for (const [x] of [...map]) { if (map.size <= M) break; if (!P.locked.includes(x) && !SOL.has(x)) map.delete(x); }
+      P.mir = [...map]; P.fired = false; save(); render();
+      if (!R.done) setStatus(st, 'One mirror placed and locked for you.');
+    },
+  };
+  GBY.mm.strip = r => HINT.repeat(r.hints) + r.prog.shots.slice(-8).map(x => (x === 'w' ? '🟩' : '🟥')).join('');
+  render();
+}
+
+// ================= ODD ONE OUT (trial) =================
+{
+  const id = 'oo', ROUNDS = [3, 3, 4, 4, 5, 5, 6][LVL], r0 = rng(seedFor(9));
+  GBY.oo.blurb = `${ROUNDS} rounds`;
+  makeSection(id, 'Patterns', 'Odd One Out');
+  $('#ooRules').innerHTML = `Fifteen tiles follow a hidden rule and one breaks it. <b>Tap the odd one out.</b> There are ${ROUNDS} rounds, and the rules get sneakier. A wrong tap costs 5. A hint clears away half the wrong answers.`;
+  const SHAPES = ['circle', 'square', 'triangle', 'star'], COLORS = ['red', 'blue', 'yellow', 'teal'], FILLS = ['solid', 'outline'];
+  const pick = a => a[Math.floor(r0() * a.length)], other = (a, v) => pick(a.filter(x => x !== v));
+  const RULES = [
+    { lvl: 0, key: 'color', touch: ['color'], make: () => { const c = pick(COLORS); return { norm: t => { t.color = c; }, odd: t => { t.color = other(COLORS, c); }, why: `Every other tile is ${c}.` }; } },
+    { lvl: 0, key: 'shape', touch: ['shape'], make: () => { const s = pick(SHAPES); return { norm: t => { t.shape = s; }, odd: t => { t.shape = other(SHAPES, s); }, why: `Every other tile shows ${s}s.` }; } },
+    { lvl: 1, key: 'count', touch: ['count'], make: () => { const n = 1 + Math.floor(r0() * 4); return { norm: t => { t.count = n; }, odd: t => { t.count = other([1, 2, 3, 4], n); }, why: `Every other tile has ${plural(n, 'shape')}.` }; } },
+    { lvl: 1, key: 'fill', touch: ['fill'], make: () => { const f = pick(FILLS); return { norm: t => { t.fill = f; }, odd: t => { t.fill = other(FILLS, f); }, why: `Every other tile is ${f === 'solid' ? 'filled in' : 'outlined'}.` }; } },
+    { lvl: 3, key: 'rot', touch: ['shape', 'rot'], make: () => ({ norm: t => { t.shape = 'triangle'; t.rot = 0; }, odd: t => { t.shape = 'triangle'; t.rot = pick([90, 180, 270]); }, why: 'Every other triangle points up.' }) },
+    { lvl: 3, key: 'parity', touch: ['count'], make: () => ({ norm: t => { t.count = pick([2, 4]); }, odd: t => { t.count = pick([1, 3]); }, why: 'Every other tile has an even number of shapes.' }) },
+    { lvl: 4, key: 'link', touch: ['shape', 'color'], make: () => { const cols = shuffle([...COLORS], r0), map = Object.fromEntries(SHAPES.map((s, i) => [s, cols[i]])); return { norm: t => { t.color = map[t.shape]; }, odd: t => { t.color = other(COLORS, map[t.shape]); }, why: `Each shape always comes in one color (${SHAPES.map(s => `${s}s ${map[s]}`).join(', ')}).` }; } },
+  ];
+  const HOLD = [3, 3, 2, 2, 1, 1, 0][LVL];
+  const rounds = []; let prevKey = null;
+  for (let j = 0; j < ROUNDS; j++) {
+    const avail = RULES.filter(x => x.lvl <= LVL && x.key !== prevKey), rule = pick(avail), spec = rule.make(); prevKey = rule.key;
+    const held = {}; shuffle(['shape', 'color', 'count', 'fill'].filter(a => !rule.touch.includes(a)), r0).slice(0, HOLD).forEach(a => { held[a] = a === 'shape' ? pick(SHAPES) : a === 'color' ? pick(COLORS) : a === 'count' ? 1 + Math.floor(r0() * 4) : pick(FILLS); });
+    const odd = Math.floor(r0() * 16);
+    const make = () => [...Array(16)].map((_, i) => {
+      const t = { shape: held.shape ?? pick(SHAPES), color: held.color ?? pick(COLORS), count: held.count ?? 1 + Math.floor(r0() * 4), fill: held.fill ?? pick(FILLS), rot: 0 };
+      (i === odd ? spec.odd : spec.norm)(t);
+      return t;
+    });
+    // Reject boards where any other tile is the only one of its kind on some attribute.
+    const clear = ts => ['shape', 'color', 'count', 'fill', 'rot'].every(a => { const n = {}; ts.forEach(t => { n[t[a]] = (n[t[a]] ?? 0) + 1; }); return ts.every((t, i) => i === odd || n[t[a]] > 1); });
+    let tiles = make();
+    for (let g = 0; g < 400 && !clear(tiles); g++) tiles = make();
+    rounds.push({ tiles, odd, why: spec.why });
+  }
+  const POS = { 1: [[50, 50]], 2: [[28, 50], [72, 50]], 3: [[50, 28], [28, 72], [72, 72]], 4: [[28, 28], [72, 28], [28, 72], [72, 72]] };
+  const tileSVG = t => {
+    const s = t.count === 1 ? 28 : 16, col = `var(--t${COLORS.indexOf(t.color) + 1})`, fill = t.fill === 'solid' ? col : 'none';
+    const common = `fill="${fill}" stroke="${col}" stroke-width="5" stroke-linejoin="round"`;
+    return `<svg viewBox="0 0 100 100" aria-hidden="true">${POS[t.count].map(([x, y]) => {
+      if (t.shape === 'circle') return `<circle cx="${x}" cy="${y}" r="${s}" ${common}/>`;
+      if (t.shape === 'square') return `<rect x="${x - s * 0.88}" y="${y - s * 0.88}" width="${s * 1.76}" height="${s * 1.76}" rx="3" ${common}/>`;
+      if (t.shape === 'triangle') return `<polygon points="${x},${y - s} ${x + s},${y + s * 0.8} ${x - s},${y + s * 0.8}" transform="rotate(${t.rot} ${x} ${y})" ${common}/>`;
+      const pts = [...Array(10)].map((_, k) => { const a = (Math.PI / 5) * k - Math.PI / 2, rr = k % 2 ? s * 0.45 : s * 1.05; return `${(x + rr * Math.cos(a)).toFixed(1)},${(y + rr * Math.sin(a)).toFixed(1)}`; }).join(' ');
+      return `<polygon points="${pts}" transform="rotate(${t.rot} ${x} ${y})" ${common}/>`;
+    }).join('')}</svg>`;
+  };
+  const DIRN = { 0: 'up', 90: 'right', 180: 'down', 270: 'left' };
+  const label = t => `${t.count} ${t.fill === 'outline' ? 'outlined ' : ''}${t.color} ${t.shape}${t.count > 1 ? 's' : ''}${t.shape === 'triangle' ? ` pointing ${DIRN[t.rot]}` : t.rot ? ` turned ${t.rot} degrees` : ''}`;
+  const R = rec(id); R.prog ??= { round: 0, wrong: [], dim: [], tries: [], how: [] };
+  const P = R.prog, st = $('#ooStatus'), play = $('#ooPlay');
+  const roundEl = document.createElement('p'); roundEl.className = 'round';
+  const grid = document.createElement('div'); grid.className = 'ogrid'; grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'Tiles. Use arrow keys to move and Enter to choose.');
+  play.append(roundEl, grid); gridNav(grid, 4);
+  const btns = [...Array(16)].map((_, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'otile'; b.addEventListener('click', () => tapTile(i)); grid.append(b); return b; });
+  const render = () => {
+    const j = Math.min(P.round, ROUNDS - 1), rd = rounds[j];
+    roundEl.textContent = R.done ? `All ${ROUNDS} rounds done` : `Round ${P.round + 1} of ${ROUNDS}`;
+    btns.forEach((b, i) => {
+      const t = rd.tiles[i], wrong = !R.done && P.wrong.includes(i), dim = !R.done && P.dim.includes(i), found = R.done && i === rd.odd;
+      b.innerHTML = tileSVG(t);
+      b.className = `otile${wrong ? ' wrong' : ''}${dim ? ' dim' : ''}${found ? ' found' : ''}`;
+      b.setAttribute('aria-label', `${label(t)}${wrong ? ', not it' : ''}${dim ? ', ruled out' : ''}${found ? ', the odd one' : ''}`);
+      b.setAttribute('aria-disabled', String(R.done || wrong || dim));
+    });
+  };
+  const tapTile = i => {
+    if (R.done || P.wrong.includes(i) || P.dim.includes(i)) return;
+    const rd = rounds[P.round];
+    if (i === rd.odd) {
+      P.tries[P.round] = P.wrong.length + 1; P.how[P.round] ??= 'a';
+      const why = rd.why; P.round++; P.wrong = []; P.dim = []; save();
+      if (P.round >= ROUNDS) { P.round = ROUNDS - 1; save(); setStatus(st, `Found it! ${why}`, 'win'); finish(id, true); render(); return; }
+      setStatus(st, `Found it! ${why} On to round ${P.round + 1}.`, 'win'); render();
+      if (grid.contains(document.activeElement)) btns[0].focus();
+    } else { P.wrong.push(i); miss(id); save(); setStatus(st, 'Not that one. −5', 'err'); render(); }
+  };
+  handlers.oo = {
+    hint() {
+      const rd = rounds[P.round], left = [...Array(16).keys()].filter(i => i !== rd.odd && !P.wrong.includes(i) && !P.dim.includes(i));
+      P.dim.push(...shuffle(left, rng(seedFor(90 + P.round))).slice(0, Math.ceil(left.length / 2))); P.how[P.round] = 'h'; save(); render();
+      setStatus(st, 'Half the wrong answers cleared away.');
+    },
+  };
+  GBY.oo.strip = r => [...Array(ROUNDS)].map((_, j) => (r.prog.how[j] === 'h' ? HINT : ATT(r.prog.tries[j] ?? 1))).join('');
+  if (R.done) setStatus(st, `All ${ROUNDS} rounds found.`, 'win');
+  render();
+}
+
+// ================= ROAD BLOCK (trial) =================
+{
+  const id = 'rb', N = 6, EXIT_ROW = 2, BANK = {"0": [[".HHFF...DDGG.AA.BICCC.BI..EEJJLLKK..", 5], [".IILLGEE.MMGBDAACGBD..C...KKJJ.HH.FF", 6], [".GG....EEE..AAD.CJBHD.CJBHF....HFII.", 6], [".GGGFF..KKD..AA.D..BEECCJBLL..JIIHH.", 6], ["ELFBCCELFBJJAAFG..IDDGKKI.HH........", 6], ["I..EE.I..GG.K.AACDK.HHCDJJFBBB..F...", 5], [".KKLLJCC..HJ.AABH.DDDBII...BFF..GGEE", 6], ["..C.FF..C.BI..AABI..EEDD.....H..GGGH", 6], [".E...D.EHH.DAACGFDB.CGF.BI.GF..I....", 5], ["..DD....FCI.AAFCIB.EEG.B...G...HHG..", 6]], "1": [["II..LL.EEMMGB.AACGBD..CG.DKKJJ..HHFF", 8], ["GGG.FF.KK.D.AA..D..BEECCJB.LL.JIIHH.", 8], ["ELFBCCELFBJJAAF...IDDKK.IHHG.....G..", 8], [".KKBLLCC.BHJAA.BHJ.DDDII...FF.GG..EE", 8], [".DDC....FCIBAAFGIB.EEG.....G.....HH.", 7], [".BBEDD.JJEGHCAAEGHC..FFF..II........", 7], ["HHII.JCGGG.JCAA..JCDDDLLMMBEF.KKBEF.", 7], [".B.CGF.B.CGF.AAKHL.DDKHL..JEEE..JII.", 8], ["EEHH....IGCKAAIGCK.DFFFK.DJB....JB..", 8], ["..C..I..CGGIAAC..F..EE.F..HHBB.DDJJ.", 7]], "2": [["II..LL.EEMMGAA..CG....CGBDKKJJBDHHFF", 10], [".GGGFF.KK.D.AA..D.JBEECCJB.LL.IIHH..", 9], ["ELFCC.ELFBJJAAFB..IDDKK.IHHG.....G..", 10], [".KKBLL.CCBH..AABH.DDDII...FF.JGGEE.J", 10], [".EEHHK..IGCKAAIGCK.DJFFF.DJB.....B..", 10], ["FFFHI.BBBHI.CAAH..C....E..GDDE..G..E", 10], [".IIIF.EEE.FH.AAGFH..DGBB..D.JJ.CC...", 10], ["FJ.DGGFJ.D..I.HAABI.H..B..H.CKEEE.CK", 10], [".CCHHH..BBLLAA.DEF...DEFGJ.D.KGJII.K", 10], ["H.....H..FBBEAAF.DEC.KKD.C..IG.JJJIG", 9]], "3": [[".KKLL.CC..H..AABH.DDDBII.FFB.JGGEE.J", 12], ["FFF..E..BBBE.AA.IEC..HI.C.GHDD..GH..", 12], ["III.F..EEEFH..AAFH..DBB...DGJJ.CCG..", 12], ["F.HDGGFJHD..IJHAABI....B....CKEEE.CK", 11], ["GCCHHHG.BBLLAA.DEF...DEF.J.D.K.JII.K", 12], ["..DBB...DFEE.AAFGC.IIFGC.HHHJ.....J.", 11], ["I.DGGGI.D...HAAE..HF.ELLKF.JJBKF.CCB", 11], ["CCFGGD..FJJD..FAAD.IIB.....BEE.HHB..", 12], ["....BB.JJIIE.AAGHEKKFGH...FCLLDD.C..", 12], ["..BBB..CCIGGAA.I.K.FFI.KJ.DEEEJ.DHH.", 12]], "4": [["KKLLH..CCBH..AAB..DDDBII..FF.JGG.EEJ", 13], ["C.FFF.C.BBBEAAG.IE..GHIE...HDD...H..", 15], ["..BB...JJIIE.AAGHE.KKGH...FCLL..FCDD", 14], ["BBBI...CCIGG.AAI.KJ.FF.KJ.DEEE..DHH.", 15], [".E.GGH.EKI.HAAKI..DBBB.FD.CJJFD.C.LL", 15], ["F...MMF..DJHFAADJHBBKKJLGCEEELGC.II.", 15], ["..F.....FG.DAABGHDIIB.HD.CEEH..C....", 15], ["D.GGBBDJJ.LLAAKF...EKF.H.EIIIH.ECCCH", 15], ["II.HDGK..HDGK.AADGE.B...ECB.JJECFFF.", 14], [".JKKHH.JGGDDAAIFCB..IFCBE..FCLEMMM.L", 13]], "5": [["JBBB..JCC.GGAADI..FFDI.KEEEI.K....HH", 19], ["GGK..H..K..H..AA.FDEBBBFDECIJJD.CILL", 19], ["F..DMMF..DJHF.AAJHBBKKJLGCEEELGC.II.", 17], ["DGGBB.DJJFLLAAKF.H.EK..H.EIIIH.E.CCC", 18], ["...LDDGF.L.HGFAAKHIBBBKHI.JCCC..JEEE", 17], [".JJBBB..DILLAADI.E.KKGGEHMMCC.HFFF..", 19], ["..H.....H.D.AAFIDCKKFIECG.JJE.G.BB..", 17], ["DMM.BBD.IIKKAAF..G..FLLGCCCJ...HHJEE", 19], ["E.GG.DECCC.DAA.F.I...F.I..HFJJ..HBBB", 19], ["IGG.CCIEE.KD.AA.KD.FFFKD..LHBB..LHJJ", 19]], "6": [["JBBB..JCCGG.AADI..FFDI.KEEEI.K..HH..", 21], ["GGK..H..K..HDEAA.FDEBBBFD.CIJJLLCI..", 25], ["JJDBBBH.DILLHAAI.EKK.GGEMMCC.....FFF", 24], ["D.MMBBD.IIKKAAF.....FLLGCCCJ.GHH.JEE", 20], ["E.GG.DECCC.DAAHF.I..HF.I...FJJ.BBB..", 20], ["IGG.CCI.EEKDAA.HKDFFFHKD..LBB...LJJ.", 22], ["JJFGC...FGC..AAB..KK.B.H.E.IIH.EDD.H", 23], ["GGGIIH..CJJHAAC.EBF...EBFDD.EB....KK", 23], ["G.EEK.G.IIK.AACDK...CDFFHHHB.....BJJ", 20], [".GFFJJ.GK.BBAAK.....IID..HHHDCEEE.DC", 24]]};
+  const list = BANK[LVL], [BOARD, PAR] = list[mod(DAY, list.length)];
+  GBY.rb.free = Math.ceil(PAR / 4);
+  GBY.rb.blurb = `Par ${PAR} moves`;
+  makeSection(id, 'Logic', 'Road Block', '<button type="button" class="btn" id="rbUndo">Undo</button><button type="button" class="btn" id="rbReset">Start over</button>');
+  $('#rbRules').innerHTML = `Slide the cars and trucks along their lanes to clear a path, then drive the <b>red car out the exit</b> on the right. Cars only move forward and back. Moving one vehicle any distance is one move. Par is <b>${PAR} moves</b>; you get ${GBY.rb.free} spare, then each extra move costs 2. Undo and Start over don't refund moves. A hint makes the next best move.`;
+  // Parse the board into vehicles: { o: 'h' | 'v', f: fixed row/col, L: length }, start positions
+  const cars = [], start = [];
+  [...new Set(BOARD.replace(/\./g, ''))].sort().forEach(ch => {
+    const idx = [...BOARD].map((x, i) => (x === ch ? i : -1)).filter(i => i >= 0);
+    const rows = idx.map(i => Math.floor(i / N)), cols = idx.map(i => i % N);
+    const h = rows.every(r => r === rows[0]);
+    cars.push({ o: h ? 'h' : 'v', f: h ? rows[0] : cols[0], L: idx.length, ch });
+    start.push(h ? Math.min(...cols) : Math.min(...rows));
+  });
+  const cellsOf = (c, p) => [...Array(c.L)].map((_, i) => (c.o === 'h' ? c.f * N + p + i : (p + i) * N + c.f));
+  const occupancy = (st, skip = -1) => { const g = new Set(); st.forEach((p, i) => { if (i !== skip) cellsOf(cars[i], p).forEach(x => g.add(x)); }); return g; };
+  const range = (st, i) => {
+    const c = cars[i], g = occupancy(st, i), at = q => (c.o === 'h' ? c.f * N + q : q * N + c.f);
+    let lo = st[i], hi = st[i];
+    while (lo - 1 >= 0 && !g.has(at(lo - 1))) lo--;
+    while (hi + c.L < N && !g.has(at(hi + c.L))) hi++;
+    return [lo, hi];
+  };
+  const nextStates = st => {
+    const out = [];
+    st.forEach((p, i) => { const [lo, hi] = range(st, i); for (let q = lo; q <= hi; q++) if (q !== p) { const s = [...st]; s[i] = q; out.push(s); } });
+    return out;
+  };
+  const solveFrom = st0 => {
+    const key = s => s.join(','), prev = new Map([[key(st0), null]]), q = [st0];
+    for (let h = 0; h < q.length; h++) {
+      const s = q[h];
+      if (s[0] === N - 2) { const path = [s]; let k = key(s); while (prev.get(k)) { const p = prev.get(k); path.unshift(p); k = key(p); } return path; }
+      for (const t of nextStates(s)) { const k = key(t); if (!prev.has(k)) { prev.set(k, s); q.push(t); } }
+    }
+    return null;
+  };
+  const R = rec(id); R.prog ??= { pos: [...start], moves: 0, hist: [], last: -1 };
+  const P = R.prog, st = $('#rbStatus');
+  const COLORS = ['var(--t2)', 'var(--t3)', 'var(--t4)', '#8e4ec6', '#f2802e', '#6b8e23', '#8d5a3b', '#5b6b8c', '#2fa66b', '#c79a2a', '#4f86c6', '#b0567b', '#3d8f7c'];
+  const board = document.createElement('div'); board.className = 'rbboard';
+  board.setAttribute('role', 'group'); board.setAttribute('aria-label', 'Parking lot. Drag a vehicle along its lane, or focus it and use the arrow keys.');
+  for (let k = 0; k < N * N; k++) { const d = document.createElement('div'); d.className = 'rbcell'; d.style.left = `${(k % N) * 100 / N}%`; d.style.top = `${Math.floor(k / N) * 100 / N}%`; board.append(d); }
+  const exit = document.createElement('div'); exit.className = 'rbexit'; exit.style.top = `${EXIT_ROW * 100 / N}%`; exit.setAttribute('aria-hidden', 'true'); exit.textContent = '›';
+  board.append(exit);
+  const els = cars.map((c, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = `rbcar${i === 0 ? ' hero' : ''}`;
+    b.style.setProperty('--car', i === 0 ? 'var(--t1)' : COLORS[(i - 1) % COLORS.length]);
+    b.style.width = `calc(${(c.o === 'h' ? c.L : 1) * 100 / N}% - 6px)`; b.style.height = `calc(${(c.o === 'v' ? c.L : 1) * 100 / N}% - 6px)`;
+    board.append(b); return b;
+  });
+  $('#rbPlay').append(board);
+  const place = (i, p) => { const c = cars[i], el = els[i]; el.style.left = `calc(${(c.o === 'h' ? p : c.f) * 100 / N}% + 3px)`; el.style.top = `calc(${(c.o === 'v' ? p : c.f) * 100 / N}% + 3px)`; };
+  const render = () => {
+    P.pos.forEach((p, i) => {
+      place(i, p);
+      const c = cars[i];
+      els[i].setAttribute('aria-label', `${i === 0 ? 'Red car' : c.L === 3 ? 'Truck' : 'Car'} ${i === 0 ? '' : c.ch}, ${c.o === 'h' ? 'moves left and right' : 'moves up and down'}, at row ${c.o === 'h' ? c.f + 1 : p + 1} column ${c.o === 'h' ? p + 1 : c.f + 1}`);
+      els[i].setAttribute('aria-disabled', String(R.done));
+    });
+    if (R.done) { board.classList.add('won'); setStatus(st, `Out in ${plural(P.moves, 'move')} (par ${PAR}).`, 'win'); return; }
+    if (P.pos[0] === N - 2) { R.misses = Math.max(0, P.moves - PAR); finish(id, true); render(); return; }
+    setStatus(st, `${plural(P.moves, 'move')} · par ${PAR}`);
+  };
+  const commit = (i, q, viaHint = false) => {
+    if (q === P.pos[i]) return;
+    if (viaHint || P.last !== i) P.hist.push([...P.pos]);
+    if (!viaHint && P.last !== i) P.moves++; // sliding the same vehicle again continues the same move
+    P.last = viaHint ? -1 : i;
+    P.pos[i] = q; save(); render();
+  };
+  // Pointer drag along the vehicle's lane
+  let drag = null;
+  board.addEventListener('pointerdown', e => {
+    const el = e.target.closest('.rbcar'); if (!el || R.done || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const i = els.indexOf(el); e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+    drag = { i, id: e.pointerId, x: e.clientX, y: e.clientY, p0: P.pos[i], rg: range(P.pos, i), cell: board.getBoundingClientRect().width / N };
+    el.classList.add('dragging');
+  });
+  board.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    e.preventDefault();
+    const c = cars[drag.i], delta = (c.o === 'h' ? e.clientX - drag.x : e.clientY - drag.y) / drag.cell;
+    const p = Math.min(drag.rg[1], Math.max(drag.rg[0], drag.p0 + delta));
+    place(drag.i, p);
+  });
+  const endDrag = e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null; els[d.i].classList.remove('dragging');
+    const c = cars[d.i], delta = (c.o === 'h' ? e.clientX - d.x : e.clientY - d.y) / d.cell;
+    commit(d.i, Math.min(d.rg[1], Math.max(d.rg[0], Math.round(d.p0 + delta))));
+    render();
+  };
+  board.addEventListener('pointerup', endDrag);
+  board.addEventListener('pointercancel', e => { if (drag && e.pointerId === drag.id) { els[drag.i].classList.remove('dragging'); drag = null; render(); } });
+  ['dragstart', 'selectstart', 'contextmenu'].forEach(t => board.addEventListener(t, e => e.preventDefault()));
+  board.addEventListener('keydown', e => {
+    const el = e.target.closest('.rbcar'); if (!el || R.done) return;
+    const i = els.indexOf(el), c = cars[i];
+    const d = c.o === 'h' ? { ArrowLeft: -1, ArrowRight: 1 }[e.key] : { ArrowUp: -1, ArrowDown: 1 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    const [lo, hi] = range(P.pos, i), q = P.pos[i] + d;
+    if (q >= lo && q <= hi) { commit(i, q); els[i].focus(); }
+  });
+  $('#rbUndo').addEventListener('click', () => { if (R.done || !P.hist.length) return; P.pos = P.hist.pop(); P.last = -1; save(); render(); setStatus(st, `Move undone. ${plural(P.moves, 'move')} · par ${PAR}`); });
+  $('#rbReset').addEventListener('click', () => { if (R.done) return; P.hist.push([...P.pos]); P.pos = [...start]; P.last = -1; save(); render(); });
+  handlers.rb = {
+    hint() {
+      const path = solveFrom(P.pos);
+      if (!path || path.length < 2) return;
+      const nxt = path[1], i = nxt.findIndex((p, k) => p !== P.pos[k]);
+      commit(i, nxt[i], true);
+      if (!R.done) setStatus(st, `Hint: moved the ${i === 0 ? 'red car' : cars[i].L === 3 ? 'truck' : 'car'}. ${plural(path.length - 2, 'move')} to go from here.`);
+    },
+  };
+  GBY.rb.strip = r => effStrip(r);
+  render();
+}
+
+// ================= COLOR SORT (trial) =================
+{
+  const id = 'cs', C = [4, 5, 6, 7, 8, 9, 10][LVL], CAP = 4, BOTTLES = C + 2, r0 = rng(seedFor(11));
+  GBY.cs.blurb = `${C} colors · ${BOTTLES} buckets`;
+  makeSection(id, 'Sorting', 'Color Sort', '<button type="button" class="btn" id="csUndo">Undo</button><button type="button" class="btn" id="csReset">Start over</button>');
+  $('#csRules').innerHTML = `Tap a bucket, then tap another to pour. You can only pour onto <b>the same color</b> or into an <b>empty bucket</b>, and only while there's room. Finish with <b>one color per bucket</b>. Each Undo costs 3 and Start over costs 6. A hint makes a move that still leads to a solution.`;
+  const PAL = [['#e5484d', '●', 'red'], ['#3e7bfa', '■', 'blue'], ['#f5c400', '▲', 'yellow'], ['#2fa66b', '◆', 'green'], ['#8e4ec6', '★', 'purple'], ['#f2802e', '✚', 'orange'], ['#e5559e', '♥', 'pink'], ['#12a594', '⬢', 'teal'], ['#8d5a3b', '▼', 'brown'], ['#7d879a', '✖', 'gray']];
+  const solvedState = bs => bs.every(b => !b.length || (b.length === CAP && b.every(x => x === b[0])));
+  const pourAmt = (bs, i, j) => {
+    const a = bs[i], b = bs[j];
+    if (i === j || !a.length || b.length === CAP) return 0;
+    const top = a[a.length - 1];
+    if (b.length && b[b.length - 1] !== top) return 0;
+    let run = 0; for (let q = a.length - 1; q >= 0 && a[q] === top; q--) run++;
+    return Math.min(run, CAP - b.length);
+  };
+  const pour = (bs, i, j) => { const n = bs.map(x => [...x]), k = pourAmt(bs, i, j); for (let t = 0; t < k; t++) n[j].push(n[i].pop()); return n; };
+  const solve = (start, limit = 120000) => {
+    const seen = new Set(), path = []; let nodes = 0;
+    const key = bs => bs.map(b => b.join('.')).sort().join('|');
+    const dfs = bs => {
+      if (solvedState(bs)) return true;
+      if (++nodes > limit) return false;
+      const k = key(bs); if (seen.has(k)) return false; seen.add(k);
+      const moves = [];
+      for (let i = 0; i < bs.length; i++) for (let j = 0; j < bs.length; j++) {
+        if (!pourAmt(bs, i, j)) continue;
+        const a = bs[i];
+        if (!bs[j].length && a.every(x => x === a[a.length - 1])) continue; // pointless: moving a pure bucket into an empty one
+        moves.push([bs[j].length ? 0 : 1, i, j]);
+      }
+      moves.sort((x, y) => x[0] - y[0]);
+      for (const [, i, j] of moves) { path.push([i, j]); if (dfs(pour(bs, i, j))) return true; path.pop(); }
+      return false;
+    };
+    return dfs(start) ? [...path] : null;
+  };
+  let START = null;
+  for (let t = 0; t < 40 && !START; t++) {
+    const units = shuffle([...Array(C * CAP)].map((_, k) => Math.floor(k / CAP)), r0);
+    const bs = [...Array(C)].map((_, b) => units.slice(b * CAP, b * CAP + CAP)).concat([[], []]);
+    if (bs.some(b => b.length && b.every(x => x === b[0]))) continue;
+    if (solve(bs)) START = bs;
+  }
+  const R = rec(id); R.prog ??= { bs: START.map(b => [...b]), hist: [], moves: 0 };
+  const P = R.prog, st = $('#csStatus');
+  let sel = null;
+  const row = document.createElement('div'); row.className = 'csrow';
+  row.setAttribute('role', 'group'); row.setAttribute('aria-label', 'Buckets. Use arrow keys to move and Enter to pick up or pour.');
+  const els = [...Array(BOTTLES)].map((_, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'bucket'; b.addEventListener('click', () => tapBucket(i)); row.append(b); return b; });
+  $('#csPlay').append(row); gridNav(row, BOTTLES);
+  const anyMove = bs => bs.some((_, i) => bs.some((__, j) => pourAmt(bs, i, j) && !(!bs[j].length && bs[i].every(x => x === bs[i][0]))));
+  const render = () => {
+    els.forEach((el, i) => {
+      const b = P.bs[i];
+      el.innerHTML = [...Array(CAP)].map((_, k) => { const v = b[k]; return v === undefined ? '<span class="seg empty"></span>' : `<span class="seg" style="--c:${PAL[v][0]}">${PAL[v][1]}</span>`; }).reverse().join('');
+      el.classList.toggle('sel', sel === i);
+      el.classList.toggle('full', b.length === CAP && b.every(x => x === b[0]));
+      el.setAttribute('aria-pressed', String(sel === i));
+      el.setAttribute('aria-label', `Bucket ${i + 1}: ${b.length ? `bottom to top ${b.map(v => PAL[v][2]).join(', ')}` : 'empty'}${b.length < CAP && b.length ? `, room for ${CAP - b.length}` : ''}${sel === i ? ', picked up' : ''}`);
+      el.setAttribute('aria-disabled', String(R.done));
+    });
+    if (R.done) { setStatus(st, `Sorted in ${plural(P.moves, 'pour')}!`, 'win'); return; }
+    if (solvedState(P.bs)) { finish(id, true); render(); return; }
+    if (!anyMove(P.bs)) setStatus(st, 'No useful pours left. Undo or start over.', 'err');
+  };
+  const tapBucket = i => {
+    if (R.done) return;
+    if (sel === null) { if (P.bs[i].length) { sel = i; setStatus(st, `Bucket ${i + 1} picked up. Tap where to pour.`); } render(); return; }
+    if (sel === i) { sel = null; setStatus(st, ''); render(); return; }
+    if (pourAmt(P.bs, sel, i)) {
+      P.hist.push(P.bs.map(b => [...b])); P.bs = pour(P.bs, sel, i); P.moves++; sel = null; save();
+      setStatus(st, `${plural(P.moves, 'pour')}`);
+    } else if (P.bs[i].length) { sel = i; setStatus(st, `Can't pour there. Bucket ${i + 1} picked up instead.`); }
+    else { setStatus(st, "Can't pour there."); }
+    render();
+  };
+  $('#csUndo').addEventListener('click', () => { if (R.done || !P.hist.length) return; P.bs = P.hist.pop(); sel = null; R.misses++; save(); setStatus(st, 'Pour undone. −3'); render(); });
+  $('#csReset').addEventListener('click', () => { if (R.done || !P.hist.length) return; P.hist = []; P.bs = START.map(b => [...b]); sel = null; R.misses += 2; save(); setStatus(st, 'Started over. −6'); render(); });
+  GBY.cs.miss = 3;
+  handlers.cs = {
+    hint() {
+      sel = null;
+      let path = solve(P.bs);
+      while (!path && P.hist.length) { P.bs = P.hist.pop(); path = solve(P.bs); }
+      if (!path || !path.length) { render(); return; }
+      const [i, j] = path[0];
+      P.hist.push(P.bs.map(b => [...b])); P.bs = pour(P.bs, i, j); save();
+      setStatus(st, `Hint: poured bucket ${i + 1} into bucket ${j + 1}.`);
+      render();
+    },
+  };
+  GBY.cs.strip = r => effStrip(r);
+  render();
+}
+
 // ================= Boot =================
+const checkNewDay = () => { if (keyOf(new Date()) !== KEY) location.reload(); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewDay(); });
+setInterval(checkNewDay, 60000);
 $$('.hb').forEach(b => b.addEventListener('click', () => { const g = b.dataset.g; if (useHint(g)) handlers[g].hint(); }));
 $('#dateTag').textContent = `#${NUM} · ${DATE_LABEL}`;
-$('#levelLine').innerHTML = `<span class="pips" aria-hidden="true">${[...Array(7)].map((_, i) => `<i class="${i <= LVL ? 'on' : ''}"></i>`).join('')}</span><span>${WEEKDAY} · ${LEVEL_NAMES[LVL]}<span class="sr-only">, difficulty ${LVL + 1} of 7</span></span>`;
+if (PREVIEW !== null) {
+  const bar = document.createElement('div'); bar.className = 'preview';
+  bar.innerHTML = `<p><b>Preview mode:</b> ${DAYNAMES[PREVIEW]} difficulty. Scores here don't touch your real stats or streak.</p><div class="row" style="justify-content:flex-start">${DAYNAMES.map((d, i) => `<a class="btn small${i === PREVIEW ? ' primary' : ''}" href="?level=${i + 1}">${d.slice(0, 3)}</a>`).join('')}<a class="btn small" href="./">Exit preview</a></div>`;
+  $('header').after(bar);
+}
+$('#levelLine').innerHTML = `<span class="pips" aria-hidden="true">${[...Array(7)].map((_, i) => `<i class="${i <= LVL ? 'on' : ''}"></i>`).join('')}</span><span>${PREVIEW === null ? WEEKDAY : `Preview: ${DAYNAMES[PREVIEW]}`} · ${LEVEL_NAMES[LVL]}<span class="sr-only">, difficulty ${LVL + 1} of 7</span></span>`;
 $('#dailyLegend').innerHTML = LEGEND;
 GAMES.forEach(g => { renderTop(g.id); renderHintBtn(g.id); renderResult(g.id); });
 renderHub(); renderStreak();
