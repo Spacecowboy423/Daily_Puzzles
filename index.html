@@ -297,14 +297,58 @@ button.gcard:active{transform:translateY(3px);box-shadow:var(--pop-sm)}
 .bgboard .belt.rot~g .slat{stroke:rgba(255,255,255,.5)}
 .bgboard .slide{animation:bgSlide var(--belt,.14s) linear infinite;animation-play-state:paused}
 .bgboard.running .slide{animation-play-state:running}
-@keyframes bgSlide{from{transform:translateX(0)}to{transform:translateX(10px)}}
+@keyframes bgSlide{from{transform:translateX(0)}to{transform:translateX(8px)}}
 .bgboard .arrow{transition:transform .18s cubic-bezier(.3,1.5,.5,1)}
 .bgboard .rotdot{fill:var(--sun);stroke-width:1.8}
 .bgboard .glyph{fill:#fff;stroke:var(--outline);stroke-width:2.6;paint-order:stroke fill;font-family:var(--display);font-weight:700}
-.bgboard .tpbase{fill:#3b2f86}
+.bgboard .tpbase{fill:#1f1b3a}
 .bgboard .tpring{fill:none;stroke:#b9a7ff;stroke-width:2.5;stroke-dasharray:5 4}
 .bgboard.running .tpring{animation:bgSpin 1.6s linear infinite;transform-box:fill-box;transform-origin:center}
 @keyframes bgSpin{to{transform:rotate(360deg)}}
+.bgboard .belt.sw{fill:#3fc4a2}.bgboard .belt.chute2{fill:#a8b0c2}
+.bgboard .lane{stroke:rgba(255,255,255,.55);stroke-width:6;stroke-linecap:round;fill:none}
+.bgboard .slide.quick{animation-duration:calc(var(--belt,.14s) / 3)}
+@media (prefers-color-scheme:dark){.bgboard .belt.sw{fill:#2ea686}.bgboard .belt.chute2{fill:#7d859c}}
+.bgboard .belt.pink{fill:#ff8f9b}.bgboard .belt.blue{fill:#59a8ff}.bgboard .belt.gray{fill:#b3bacb}
+.bgboard .laneedge{fill:none;stroke:var(--outline);stroke-width:2.6;pointer-events:none}
+.bgboard .lanehit{fill:transparent;cursor:pointer}
+.bgboard .lanehit:focus-visible{outline:none;stroke:var(--accent);stroke-width:4.5;fill:transparent}
+.bgboard .armlane{stroke:rgba(255,255,255,.6);stroke-width:7;stroke-linecap:round;fill:none}
+.bgboard .armbar{transition:transform .2s cubic-bezier(.3,1.5,.5,1)}
+.bgboard .pushbody{fill:#9aa3b8}.bgboard .plunger{fill:#c9ced9}
+.bgboard .lamp.stop{fill:#ff4a5a}.bgboard .lamp.go{fill:#3bea7c;filter:drop-shadow(0 0 3px #3bea7c)}
+.bgboard .punch .plunger{animation:bgPunch .35s ease-out}
+@keyframes bgPunch{30%{transform:translateX(14px)}}
+.bgboard .hinted .belt,.bgboard .hinted .pushbody,.bgboard .lanehit.hinted{animation:bgPulse .5s 3}
+@media (prefers-color-scheme:dark){.bgboard .belt.pink{fill:#e0697a}.bgboard .belt.blue{fill:#4a8df0}.bgboard .belt.gray{fill:#8a91a6}.bgboard .pushbody{fill:#7c849b}}
+@media (prefers-reduced-motion:reduce){.bgboard .punch .plunger{animation:none}.bgboard .armbar{transition:none}}
+.bgboard .chuteol{fill:none;stroke:var(--outline);stroke-width:34;stroke-linecap:round;stroke-linejoin:round}
+.bgboard .chutewall{fill:none;stroke:#8d95aa;stroke-width:29;stroke-linecap:round;stroke-linejoin:round}
+.bgboard .chutebed{fill:none;stroke:#cdd2de;stroke-width:19;stroke-linecap:round;stroke-linejoin:round}
+.bgboard .pushbody{fill:#a7afc2}.bgboard .plunger{fill:#d7dbe4}.bgboard .plate{fill:#ff8a3d}
+.bgboard .lampr{fill:#4a2229}.bgboard .lampr.lit{fill:#ff3b4e;filter:drop-shadow(0 0 4px #ff3b4e)}
+.bgboard .lampg{fill:#1c3d2a}.bgboard .lampg.lit{fill:#3bea7c;filter:drop-shadow(0 0 6px #3bea7c)}
+.bgboard .punch .plunger,.bgboard .punch .plate{animation:bgPunch .35s ease-out}
+@media (prefers-color-scheme:dark){.bgboard .chutewall{stroke:#6c738a}.bgboard .chutebed{stroke:#a9b0c2}}
+.bgboard .yard{fill:#3b3d47;stroke:var(--outline);stroke-width:3}
+.bgboard .floor{fill:#4c4f5c;stroke:none}
+.bgboard .belt.blue{fill:#1f8dff}.bgboard .belt.pink{fill:#ff6f8e}
+.bgboard .slat{stroke:rgba(0,0,0,.22);stroke-width:2.4}
+.bgboard .rail{fill:#2b2d38}
+.bgboard .ab .af{fill:#9cf1ff}.bgboard .ap .af{fill:#ffdce5}
+.bgboard .chuteol{stroke-width:36}.bgboard .chutewall{stroke:#8e94a5;stroke-width:31}.bgboard .chutehi{fill:none;stroke:#e6e9f0;stroke-width:25;stroke-linecap:round;stroke-linejoin:round}.bgboard .chutebed{fill:none;stroke-width:21;stroke-linecap:round;stroke-linejoin:round}
+.bgboard .tpbase{fill:#141419}.bgboard .tpring{fill:none;stroke:#4d505c;stroke-width:2.5;stroke-dasharray:4 3}.bgboard .tpl{fill:#c7cad3;font-weight:700}
+.bgboard .pushbody{fill:#eef0f5}.bgboard .plate{fill:#ff8a3d}.bgboard .plunger{fill:#b9bfcc}
+.bgboard .dock{stroke:#9aa0b2;opacity:.8}
+.bgboard .laneedge{stroke:none}
+@media (prefers-color-scheme:dark){.bgboard .belt.blue{fill:#1f8dff}.bgboard .belt.pink{fill:#ff6f8e}.bgboard .chutewall{stroke:#8e94a5}.bgboard .pushbody{fill:#eef0f5}}
+.rushbtn{font:600 .98rem var(--display);border:2.5px solid var(--outline);border-radius:999px;background:var(--surface);color:var(--ink);padding:8px 14px;min-height:42px;cursor:pointer;box-shadow:var(--pop-sm)}
+.rushbtn[aria-pressed="true"]{background:#ff5d3a;color:#fff}
+.rushbtn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+/* flagship: the baggage board gets more of the page */
+#v-bg,#v-ubg{margin-inline:calc(50% - min(50vw - 12px, 400px))}
+#v-bg .board,#v-ubg .board{padding-inline:8px}
+.bgboard,.bgbar{max-width:780px}
 .bgboard .dock{fill:none;stroke:var(--outline);stroke-width:2;stroke-dasharray:4 4;opacity:.45}
 .bgboard .tpout{fill:var(--sun);stroke-width:1.8}
 .bgboard .chute{fill:var(--accent);stroke:var(--outline);stroke-width:2;stroke-linejoin:round}
@@ -483,7 +527,7 @@ const UNL = ['rb', 'cs', 'ls', 'mm', 'oo', 'bg'];
 UNL.forEach(b => { const u = { ...GBY[b], id: `u${b}`, base: b, unl: true, trial: false }; GAMES.push(u); GBY[u.id] = u; });
 const blankRec = () => ({ hints: 0, misses: 0, done: false, prog: null, start: null });
 // Saved progress is tied to a game version and a puzzle; anything older starts that game fresh instead of crashing.
-const GAME_VER = { ls: 1, cs: 1, rb: 2, mm: 3, oo: 2, bg: 6 };
+const GAME_VER = { ls: 1, cs: 1, rb: 2, mm: 3, oo: 2, bg: 11 };
 const recFor = (id, L, pick) => {
   const base = GBY[id].base ?? id, sig = `${GAME_VER[base]}:${L}:${pick}`, R = rec(id);
   if (R.sig === undefined && GAME_VER[base] === 1 && !R.broken) R.sig = sig;
@@ -1906,18 +1950,19 @@ safeMount(mountCS, 'cs', LVL, DAY);
 
 // ================= BAGGAGE MAZE (trial): turn the belts, route every bag to its bin =================
 const mountBG = (id, L, pick) => {
+  // which pieces each day uses: single tiles, long lanes, gray slides with junction arms, pushers, teleports
   const CF = [
-    { R: 6, C: 6, bags: 3, colors: 2, tp: 0, conflicts: 0, gap: 7, decoys: 2 },
-    { R: 6, C: 7, bags: 4, colors: 3, tp: 0, conflicts: 1, gap: 6, decoys: 3 },
-    { R: 7, C: 7, bags: 4, colors: 3, tp: 1, conflicts: 1, gap: 5, decoys: 3 },
-    { R: 7, C: 8, bags: 5, colors: 4, tp: 1, conflicts: 2, gap: 4, decoys: 4 },
-    { R: 8, C: 8, bags: 6, colors: 4, tp: 2, conflicts: 2, gap: 3, decoys: 4 },
-    { R: 8, C: 9, bags: 7, colors: 5, tp: 2, conflicts: 3, gap: 2, decoys: 5 },
-    { R: 9, C: 9, bags: 8, colors: 5, tp: 3, conflicts: 4, gap: 2, decoys: 5 },
+    { R: 6, C: 6, bags: 3, colors: 2, tp: 0, conflicts: 0, gap: 7, decoys: 2, lanes: 1, blueLane: 0.5, arm: 0, push: 0, gray: 0 },
+    { R: 6, C: 7, bags: 4, colors: 3, tp: 0, conflicts: 1, gap: 6, decoys: 3, lanes: 1, blueLane: 0.6, arm: 0.5, push: 0, gray: 0.35 },
+    { R: 7, C: 7, bags: 4, colors: 3, tp: 1, conflicts: 1, gap: 5, decoys: 3, lanes: 2, blueLane: 0.6, arm: 0.4, push: 1, gray: 0.35 },
+    { R: 7, C: 8, bags: 5, colors: 4, tp: 1, conflicts: 2, gap: 4, decoys: 4, lanes: 2, blueLane: 0.6, arm: 0.4, push: 1, gray: 0.4 },
+    { R: 8, C: 8, bags: 6, colors: 4, tp: 2, conflicts: 2, gap: 3, decoys: 4, lanes: 2, blueLane: 0.6, arm: 0.4, push: 2, gray: 0.4 },
+    { R: 8, C: 9, bags: 7, colors: 5, tp: 2, conflicts: 3, gap: 2, decoys: 5, lanes: 3, blueLane: 0.6, arm: 0.4, push: 2, gray: 0.45 },
+    { R: 9, C: 9, bags: 8, colors: 5, tp: 3, conflicts: 4, gap: 2, decoys: 5, lanes: 3, blueLane: 0.6, arm: 0.4, push: 3, gray: 0.45 },
   ][L];
   const { R: ROWS, C: COLS } = CF, N = ROWS * COLS;
   const PAL = [['#e5484d', '●', 'red'], ['#8a5a2b', '■', 'brown'], ['#f5c400', '▲', 'yellow'], ['#2fa66b', '◆', 'green'], ['#8e4ec6', '★', 'purple'], ['#f2802e', '✚', 'orange']];
-  const TPSYM = ['A', 'B', 'C', 'D']; // letters so pads never look like a bin's color shape
+  const TPSYM = ['★', '●', '◆', '■']; // matching symbols link a pair of teleport pads
   const DV = [[-1, 0], [0, 1], [1, 0], [0, -1]], DNAME = ['up', 'right', 'down', 'left'];
   const rc = k => [Math.floor(k / COLS), k % COLS];
   const step = (k, d) => { const [r, c] = rc(k), nr = r + DV[d][0], nc = c + DV[d][1]; return nr < 0 || nc < 0 || nr >= ROWS || nc >= COLS ? -1 : nr * COLS + nc; };
@@ -1998,9 +2043,9 @@ const mountBG = (id, L, pick) => {
     if (CF.conflicts && conflictCells.length < 1) return null;
     if (conflictCells.some(k => routes.some(r => { const ix = r.moves.findIndex(m => m[0] === k); return ix >= 0 && ix < 2; }))) return null;
     if (CF.tp && !routes.some(r => r.moves.some(([u]) => cell[u].t === 'tp'))) return null;
-    // timing: bag i spawns at tick T_i; the cell on move k is visited at T_i + k
+    // timing: bag i rolls in at tick T_i; the cell on move k is visited at T_i + k
     const T = routes.map((_, i) => 2 + i * CF.gap);
-    const visits = () => routes.flatMap((r, i) => r.moves.map(([u, d], k) => ({ u, d, t: T[i] + k, i })));
+    const visits = () => routes.flatMap((r, i) => r.moves.map(([u, d], k) => ({ u, d, t: T[i] + k, i, from: k ? r.moves[k - 1][1] : -1 })));
     for (let pass = 0; pass < 200; pass++) {
       const v = visits(); let bad = -1;
       for (const a of v) for (const b of v) {
@@ -2018,12 +2063,67 @@ const mountBG = (id, L, pick) => {
     [...Array(N).keys()].forEach(k => {
       const c = cell[k]; if (c.t !== 'b' || !c.need.length) return;
       const turn = routes.some(r => { const ix = r.moves.findIndex(m => m[0] === k); return ix > 0 && r.moves[ix - 1][1] !== r.moves[ix][1]; });
-      c.rot = !c.spawn && (conflictCells.includes(k) || (turn && r0() < 0.75) || r0() < 0.18);
+      c.rot = !c.spawn && !c.slide && (conflictCells.includes(k) || (turn && r0() < 0.75) || r0() < 0.18);
       c.dir = c.need[0].d;
+    });
+    // pushers: a belt that bags cross straight, where some bags must be knocked sideways
+    const isConf = k => conflictCells.includes(k);
+    let pushes = 0;
+    for (const k of shuffle([...conflictCells], r0)) {
+      if (pushes >= CF.push) break;
+      const c = cell[k], vis = visits().filter(x => x.u === k), ds = [...new Set(vis.map(x => x.d))];
+      const ins = [...new Set(vis.map(x => x.from))];
+      if (ds.length !== 2 || ins.length !== 1 || ins[0] < 0) continue;
+      const sDir = ins[0], p = ds.find(d => d !== sDir);
+      if (!ds.includes(sDir) || p === undefined || (p + 2) % 4 === sDir) continue;
+      const q = step(k, (p + 2) % 4);
+      if (q < 0 || cell[q].t !== 'e') continue;
+      cell[q] = { t: 'push', dir: p, target: k, on: false, need: vis.sort((a, b) => a.t - b.t).map(x => ({ t: x.t, v: x.d === p })) };
+      c.rot = false; c.dir = sDir; c.pusher = q; c.fixedBy = 'push'; pushes++;
+    }
+    if (CF.push && !pushes) return null;
+    // junction arms: gray slide squares that flip between exactly two exits
+    [...Array(N).keys()].forEach(k => {
+      const c = cell[k]; if (c.t !== 'b' || !c.rot) return;
+      const ds = [...new Set(c.need.map(n => n.d))];
+      if (ds.length > 2 || r0() >= CF.arm) return;
+      // an arm is a diagonal deflector: bags come in one way and either go straight on or turn 90°
+      const ins = [...new Set(visits().filter(v => v.u === k).map(v => v.from))];
+      if (ins.length !== 1 || ins[0] < 0) return;
+      const h = ins[0], perp = d => d % 2 !== h % 2;
+      if (ds.some(d => d !== h && !perp(d))) return;
+      let pair;
+      if (ds.length === 2) { if (!ds.includes(h)) return; pair = ds; }
+      else if (ds[0] === h) { const t = pickOne([0, 1, 2, 3].filter(x => perp(x) && step(k, x) >= 0)); if (t === undefined) return; pair = [h, t]; }
+      else pair = [ds[0], h];
+      c.kind = 'arm'; c.sw = pair; c.armIn = h;
+    });
+    // long lanes: straight runs of fixed belts that all bags cross the same way
+    const fixedB = k => k >= 0 && cell[k].t === 'b' && !cell[k].rot && !cell[k].spawn && !cell[k].lane && (!isConf(k) || cell[k].pusher !== undefined);
+    let laneId = 0;
+    for (const k of shuffle([...Array(N).keys()], r0)) {
+      if (laneId >= CF.lanes || !fixedB(k)) continue;
+      const d = cell[k].dir; let a = k;
+      while (fixedB(step(a, (d + 2) % 4)) && cell[step(a, (d + 2) % 4)].dir === d) a = step(a, (d + 2) % 4);
+      const run = [a]; while (fixedB(step(run.at(-1), d)) && cell[step(run.at(-1), d)].dir === d) run.push(step(run.at(-1), d));
+      if (run.length < 3) continue;
+      const blue = r0() < CF.blueLane, id = ++laneId;
+      run.forEach(u => { cell[u].lane = id; cell[u].kind = 'lane'; cell[u].blueLane = blue; });
+    }
+    // everything else that turns is a single blue tile; fixed squares are pink, some of them gray slides
+    [...Array(N).keys()].forEach(k => {
+      const c = cell[k]; if (c.t !== 'b' || c.kind) return;
+      if (c.rot) c.kind = 'tile';
+      else {
+        const vis = visits().filter(v => v.u === k), ins = [...new Set(vis.map(v => v.from))];
+        const ok = !c.spawn && ins.length === 1 && ins[0] >= 0 && (r0() < CF.gray || [0, 1, 2, 3].some(d => cell[step(k, d)]?.kind === 'arm'));
+        c.kind = ok ? 'slide' : 'fix';
+        if (ok) c.conn = [(ins[0] + 2) % 4, c.dir]; // a slide joins the side bags come in by and the side they leave by, both ways
+      }
     });
     // decoy belts branching off turnable belts, ending at a wrong bin or the edge
     for (let t = 0; t < CF.decoys; t++) {
-      const roots = [...Array(N).keys()].filter(k => cell[k].t === 'b' && cell[k].rot && !cell[k].spawn);
+      const roots = [...Array(N).keys()].filter(k => cell[k].t === 'b' && cell[k].rot && cell[k].kind === 'tile');
       if (!roots.length) break;
       let k = pickOne(roots), len = 2 + Math.floor(r0() * 3);
       const opts = [0, 1, 2, 3].filter(d => { const v = step(k, d); return v >= 0 && cell[v].t === 'e'; });
@@ -2031,27 +2131,46 @@ const mountBG = (id, L, pick) => {
       let d = pickOne(opts), u = step(k, d);
       while (len-- > 0 && u >= 0 && cell[u].t === 'e') {
         const nd = r0() < 0.35 ? pickOne([0, 1, 2, 3].filter(x => x !== (d + 2) % 4)) : d;
-        cell[u] = { t: 'b', dir: nd, rot: r0() < 0.3, need: [], decoy: true };
+        const rt = r0() < 0.3;
+        const sl = !rt && r0() < CF.gray;
+        cell[u] = { t: 'b', dir: nd, rot: rt, need: [], decoy: true, kind: rt ? 'tile' : sl ? 'slide' : 'fix', ...(sl ? { conn: [(d + 2) % 4, nd] } : {}) };
         d = nd; u = step(u, d);
       }
     }
-    // scramble turnable belts
+    // scramble everything the player controls
     [...Array(N).keys()].forEach(k => {
-      const c = cell[k]; if (c.t !== 'b' || !c.rot) return;
-      c.dir = pickOne([0, 1, 2, 3].filter(x => x !== (c.need[0]?.d ?? -1)));
+      const c = cell[k]; if (c.t !== 'b') return;
+      if (c.kind === 'tile') c.dir = pickOne([0, 1, 2, 3].filter(x => x !== (c.need[0]?.d ?? -1)));
+      if (c.kind === 'arm') c.dir = c.sw.find(x => x !== c.need[0].d);
     });
-    if (![...Array(N).keys()].some(k => cell[k].t === 'b' && cell[k].rot && cell[k].need.length)) return null;
+    for (let id = 1; id <= laneId; id++) {
+      const run = [...Array(N).keys()].filter(k => cell[k].lane === id);
+      if (cell[run[0]].blueLane) run.forEach(k => { cell[k].dir = (cell[k].dir + 2) % 4; });
+    }
+    const controllable = cell.some(c => (c.kind === 'tile' || c.kind === 'arm') && c.need.length) || cell.some(c => c.t === 'push') || cell.some(c => c.blueLane && c.need.length);
+    if (!controllable) return null;
     return { cell, pair, routes, T, spawns, bins };
   };
   let PZ = null;
   for (let s = 0; s < 1500 && !PZ; s++) PZ = gen(rng(seedAt(pick, 13 + 1000 * s)));
   const { cell, pair, routes, T, spawns } = PZ;
-  const START_DIRS = cell.map(c => c.dir);
-  const turnables = [...Array(N).keys()].filter(k => cell[k].t === 'b' && cell[k].rot);
+  // everything the player can click: single tiles (4 ways), junction arms (2 ways), blue lanes (reverse), pushers (light on/off)
+  const controls = [];
+  [...Array(N).keys()].forEach(k => {
+    const c = cell[k];
+    if (c.t === 'b' && (c.kind === 'tile' || c.kind === 'arm')) controls.push({ kind: c.kind, at: k, cells: [k], need: c.need.map(n => ({ t: n.t, v: n.d })), get: () => c.dir, set: v => { c.dir = v; }, next: () => (c.kind === 'arm' ? (c.dir === c.sw[0] ? c.sw[1] : c.sw[0]) : (c.dir + 1) % 4) });
+    if (c.t === 'push') controls.push({ kind: 'push', at: k, cells: [k], need: c.need, get: () => c.on, set: v => { c.on = v; }, next: () => !c.on });
+  });
+  [...new Set(cell.filter(c => c.blueLane).map(c => c.lane))].forEach(id => {
+    const ks = [...Array(N).keys()].filter(k => cell[k].lane === id), c0 = cell[ks[0]];
+    const need = ks.flatMap(k => cell[k].need.map(n => ({ t: n.t, v: n.d }))).sort((a, b) => a.t - b.t);
+    controls.push({ kind: 'lane', at: ks[0], cells: ks, need, get: () => c0.dir, set: v => ks.forEach(k => { cell[k].dir = v; }), next: () => (c0.dir + 2) % 4 });
+  });
+  const START = controls.map(ct => ct.get());
 
   GBY[id].blurb = `${ROWS}×${COLS} · ${plural(CF.bags, 'bag')}${CF.tp ? ` · ${plural(CF.tp, 'teleport')}` : ''}`;
   makeSection(id, 'Logic · real-time', 'Baggage Maze', `<button type="button" class="btn" id="${id}Restart">↺ Restart</button><button type="button" class="btn primary" id="${id}Go">▶ Play</button>`);
-  $(`#${id}Rules`).innerHTML = `Every suitcase waits outside the grid next to its own entrance belt, and they roll in in the order of their numbers. On harder days several bags are moving at once. They roll the way the arrows point. <b>Blue belts sit on turntables</b>: tap one to turn it. Set up the routes, press <b>Play</b>, and keep turning belts while the bags roll, because sometimes two bags need the same belt to point different ways. Every bag must reach the <b>bin of its color</b>.${CF.tp ? ' A bag that rolls onto a <b>teleport pad</b> pops out of the pad with the same letter and leaves it the way that pad’s little arrow points.' : ''} <b>One wrong bin, or a bag rolling off the belts, ends the run.</b> Restart costs 10. Use 🐢 and 🐇 to switch between slow and fast.`;
+  $(`#${id}Rules`).innerHTML = `Get every suitcase into the <b>bin of its color</b>. Bags wait outside the grid and roll in by number; on harder days several move at once. <b>Blue pieces change, pink and gray ones don’t.</b> A small blue tile turns to any of the four directions. A long blue belt reverses when tapped. On gray slides a bag can’t change course, except where a <b>junction arm</b> (striped bar) blocks one exit: tap it to swing it to the other. A <b>pusher</b> with a green light punches the next bag that passes in front of it onto whatever is ahead, then turns red; tap it to set the light.${CF.tp ? ' <b>Teleport pads</b> with the same symbol are linked; a bag pops out of the twin and leaves the way its little arrow points.' : ''} Set things up, press <b>Play</b>, and keep changing pieces while bags roll. <b>One wrong bin, or a bag rolling off the belts, ends the run.</b> Restart costs 10. 🐢 and 🐇 switch speed.`;
 
   // ---- state
   const R = recFor(id, L, pick); R.prog ??= { delivered: 0, restarts: 0, started: false, best: 0 };
@@ -2068,86 +2187,175 @@ const mountBG = (id, L, pick) => {
   const VW = COLS * U + mg[1] + mg[3], VH = ROWS * U + mg[0] + mg[2];
   const NS = 'http://www.w3.org/2000/svg', el = (t, a = {}, parent) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); parent?.append(e); return e; };
   const bar = document.createElement('div'); bar.className = 'bgbar';
-  bar.innerHTML = `<span class="bghud" aria-live="off"></span><span class="speed" role="group" aria-label="Speed"><button type="button" id="${id}Slow" aria-pressed="true">🐢 Slow</button><button type="button" id="${id}Fast" aria-pressed="false">🐇 Fast</button></span>`;
+  bar.innerHTML = `<span class="bghud" aria-live="off"></span><span class="speed" role="group" aria-label="Speed"><button type="button" id="${id}Slow" aria-pressed="true">🐢 Slow</button><button type="button" id="${id}Fast" aria-pressed="false">🐇 Fast</button></span>${id === 'ubg' ? `<button type="button" class="rushbtn" id="${id}Rush" aria-pressed="false" title="Rush: levels start already running, like the original">⚡ Rush</button>` : ''}`;
   const hud = bar.firstChild;
-  const svg = el('svg', { viewBox: `0 0 ${VW} ${VH}`, class: 'bgboard', role: 'group', 'aria-label': 'Baggage belts. Tab to a blue belt and press Enter to turn it; arrow keys move between blue belts.' });
+  const svg = el('svg', { viewBox: `0 0 ${VW} ${VH}`, class: 'bgboard', role: 'group', 'aria-label': 'Baggage belts. Tab to a blue belt, junction arm or pusher and press Enter to change it; arrow keys move between them.' });
   $(`#${id}Play`).append(bar, svg);
   const clipId = `${id}Clip${Math.random().toString(36).slice(2, 7)}`;
-  el('rect', { x: -14, y: -14, width: 28, height: 28, rx: 4 }, el('clipPath', { id: clipId, clipPathUnits: 'userSpaceOnUse' }, el('defs', {}, svg)));
+  const defs = el('defs', {}, svg);
+  el('rect', { x: -20, y: -20, width: 40, height: 40, rx: 3 }, el('clipPath', { id: clipId, clipPathUnits: 'userSpaceOnUse' }, defs));
+  // industrial textures: yellow/black hazard stripes and diamond-plate steel for the slides
+  defs.insertAdjacentHTML('beforeend', `<pattern id="${clipId}hz" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="12" height="12" fill="#ffcf24"/><rect width="6" height="12" fill="#22212b"/></pattern><pattern id="${clipId}dp" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="#bfc4cf"/><path d="M1 2.5l2.5 2.5M5.5 8l2.5-2.5" stroke="#eef0f5" stroke-width="1.6" stroke-linecap="round"/><path d="M1.6 3.6l2 2M6 8.6l2-2" stroke="#8d93a3" stroke-width="1" stroke-linecap="round"/></pattern>`);
   const gFloor = el('g', {}, svg), gTiles = el('g', {}, svg), gWait = el('g', { 'pointer-events': 'none' }, svg), gBags = el('g', { 'pointer-events': 'none' }, svg);
-  el('rect', { x: mg[3] - 5, y: mg[0] - 5, width: COLS * U + 10, height: ROWS * U + 10, rx: 12, class: 'floor' }, gFloor);
+  // the whole scene sits on a dark factory floor with a hazard-striped frame around the playing grid
+  el('rect', { x: 2, y: 2, width: VW - 4, height: VH - 4, rx: 14, class: 'yard' }, gFloor);
+  el('rect', { x: mg[3] - 6, y: mg[0] - 6, width: COLS * U + 12, height: ROWS * U + 12, rx: 6, fill: 'none', stroke: `url(#${clipId}hz)`, 'stroke-width': 7 }, gFloor);
+  el('rect', { x: mg[3] - 2, y: mg[0] - 2, width: COLS * U + 4, height: ROWS * U + 4, rx: 3, class: 'floor' }, gFloor);
   const X = k => mg[3] + rc(k)[1] * U, Y = k => mg[0] + rc(k)[0] * U;
   // chunky cartoon arrow: dark outline under a white arrow
-  const ARROW = '<rect x="-18" y="-18" width="36" height="36" fill="none"/><path d="M-9 0h14M1-6l6 6-6 6" fill="none" stroke="var(--outline)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-9 0h14M1-6l6 6-6 6" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>';
+  // big solid belt arrow, tinted to match its belt (light cyan on blue, light pink on pink)
+  const ARROW = '<rect x="-18" y="-18" width="36" height="36" fill="none"/><path d="M-11-4.5h8v-7.5l14 12-14 12v-7.5h-8z" class="af" stroke="var(--outline)" stroke-width="2.2" stroke-linejoin="round"/>';
   const order = routes.map((_, i) => i).sort((a, b) => T[a] - T[b]), rank = i => order.indexOf(i) + 1;
-  const tileEls = new Map(), previews = new Map();
+  const tileEls = new Map(), previews = new Map(), ROT = [270, 0, 90, 180], at = k => `row ${rc(k)[0] + 1}, column ${rc(k)[1] + 1}`;
+  const CHEV = '<path d="M-9-7l6 7-6 7M1-7l6 7-6 7" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>';
+  const ctrlOf = new Map(); controls.forEach(ct => ct.cells.forEach(k => ctrlOf.set(k, ct)));
   [...Array(N).keys()].forEach(k => {
     const c = cell[k], x = X(k), y = Y(k);
     if (c.t === 'e') return;
     const g = el('g', { transform: `translate(${x + U / 2} ${y + U / 2})` }, gTiles);
+    if (c.t === 'push' || c.kind === 'arm') el('rect', { x: -20, y: -20, width: 40, height: 40, fill: 'transparent' }, g); // whole square is the tap target
     if (c.t === 'bin') {
       // an open hamper: colored box, dark mouth, the color's shape on the front
       const [col, sym, name] = PAL[c.color], body = el('g', { class: 'binin' }, g);
-      el('rect', { x: -18, y: -18, width: 36, height: 36, rx: 8, fill: col, class: 'ol' }, body);
-      el('rect', { x: -12.5, y: -12.5, width: 25, height: 25, rx: 5, fill: 'rgba(0,0,0,.32)' }, body);
-      el('text', { x: 0, y: 6.5, 'text-anchor': 'middle', 'font-size': 18, class: 'glyph', 'aria-hidden': 'true' }, body).textContent = sym;
+      el('rect', { x: -19, y: -19, width: 38, height: 16, rx: 3, fill: col, class: 'ol' }, body);
+      el('rect', { x: -15, y: -16, width: 30, height: 10, rx: 2, fill: 'rgba(0,0,0,.45)' }, body);
+      el('path', { d: 'M-19-6H19L16 19H-16Z', fill: col, class: 'ol', 'stroke-linejoin': 'round' }, body);
+      el('path', { d: 'M-16-2H16', stroke: 'rgba(255,255,255,.45)', 'stroke-width': 2.4, 'stroke-linecap': 'round' }, body);
       g.setAttribute('aria-label', `${name} bin`); g.setAttribute('role', 'img'); g.classList.add('bin');
       c.g = g; return;
     }
     if (c.t === 'tp') {
-      el('circle', { r: 18, class: 'ol tpbase' }, g);
-      el('circle', { r: 12.5, class: 'tpring' }, g);
-      el('text', { x: 0, y: 6.5, 'text-anchor': 'middle', 'font-size': 17, class: 'glyph tpl', 'aria-hidden': 'true' }, g).textContent = TPSYM[c.sym];
-      el('path', { d: 'M13 -7L21 0L13 7Z', class: 'ol tpout', transform: `rotate(${[270, 0, 90, 180][c.out]})` }, g);
-      g.setAttribute('aria-label', `teleport pad ${TPSYM[c.sym]}, bags come out heading ${DNAME[c.out]}`); g.setAttribute('role', 'img');
+      el('rect', { x: -19, y: -19, width: 38, height: 38, rx: 4, fill: '#6f7383', class: 'ol' }, g);
+      el('rect', { x: -14, y: -14, width: 28, height: 28, rx: 3, class: 'tpbase' }, g);
+      el('circle', { r: 10.5, class: 'tpring' }, g);
+      el('text', { x: 0, y: 6, 'text-anchor': 'middle', 'font-size': 16, class: 'tpl', 'aria-hidden': 'true' }, g).textContent = TPSYM[c.sym];
+      el('path', { d: 'M13 -7L21 0L13 7Z', class: 'ol tpout', transform: `rotate(${ROT[c.out]})` }, g);
+      g.setAttribute('aria-label', `teleport pad ${TPSYM[c.sym]}, bags come out of its twin; this pad sends bags ${DNAME[c.out]}`); g.setAttribute('role', 'img');
       return;
     }
-    // belt tile: turntables get a round base; slats slide the way the belt runs
-    if (c.rot) el('circle', { r: 19.5, class: 'ol turntable' }, g);
-    el('rect', { x: c.rot ? -16 : -18.5, y: c.rot ? -16 : -18.5, width: c.rot ? 32 : 37, height: c.rot ? 32 : 37, rx: c.rot ? 7 : 6, class: `ol belt${c.rot ? ' rot' : ''}` }, g);
-    const clip = el('g', { 'clip-path': `url(#${clipId})` }, g);
-    const rotor = el('g', {}, clip), slide = el('g', { class: 'slide' }, rotor);
-    for (let i = -30; i <= 30; i += 10) el('line', { x1: i, y1: -16, x2: i, y2: 16, class: 'slat' }, slide);
-    const arrow = el('g', { class: 'arrow' }, g); arrow.innerHTML = ARROW;
-    if (c.rot) {
-      g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.classList.add('turn');
-      el('circle', { cx: 13, cy: -13, r: 5.5, class: 'ol rotdot' }, g);
-      el('path', { d: 'M10.6 -14.3a3 3 0 1 0 4.6 .9', fill: 'none', stroke: 'var(--outline)', 'stroke-width': 1.4, 'stroke-linecap': 'round', class: 'rotmark' }, g);
-      const turn = () => { if (phase === 'over' || R.done) return; c.dir = (c.dir + 1) % 4; drawTile(k); };
-      g.addEventListener('click', e => { if (e.button === 0) turn(); });
-      g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) turn(); } });
+    if (c.t === 'push') {
+      // pusher machine: a chunky steel press filling its square, hazard-striped back, a big red/green light, and a plunger aimed at its belt
+      const body = el('g', { transform: `rotate(${ROT[c.dir]})` }, g);
+      el('rect', { x: 6, y: -7, width: 12, height: 14, rx: 2, class: 'ol plunger' }, body);
+      el('rect', { x: 14, y: -15, width: 7, height: 30, rx: 2.5, class: 'ol plate' }, body);
+      el('rect', { x: -19.5, y: -19.5, width: 30, height: 39, rx: 6, class: 'ol pushbody' }, body);
+      el('rect', { x: -19.5, y: -19.5, width: 7, height: 39, rx: 3, fill: `url(#${clipId}hz)`, stroke: 'var(--outline)', 'stroke-width': 2 }, body);
+      el('rect', { x: -10, y: -16, width: 17, height: 32, rx: 6, fill: '#22212b', stroke: 'var(--outline)', 'stroke-width': 2 }, body);
+      const red = el('circle', { cx: -1.5, cy: -7.5, r: 5.6, class: 'lampr' }, body), lamp = el('circle', { cx: -1.5, cy: 7.5, r: 5.6, class: 'lampg' }, body);
+      tileEls.set(k, { g, lamp, red, body });
+    } else {
+      const kind = c.kind ?? 'fix', lane = kind === 'lane', tt = kind === 'tile', chute = kind === 'slide' || kind === 'arm';
+      let rotor = null;
+      const tone = lane ? (c.blueLane ? 'ab' : 'ap') : tt ? 'ab' : 'ap';
+      if (!lane && !chute) {
+        el('rect', { x: -19.5, y: -19.5, width: 39, height: 39, rx: 3, class: `ol belt ${tt ? 'blue' : 'pink'}` }, g);
+        const clip = el('g', { 'clip-path': `url(#${clipId})` }, g);
+        rotor = el('g', {}, clip); const sl = el('g', { class: 'slide' }, rotor);
+        for (let i = -32; i <= 32; i += 8) el('line', { x1: i, y1: -20, x2: i, y2: 20, class: 'slat' }, sl);
+        el('rect', { x: -22, y: -20, width: 44, height: 4, class: 'rail' }, rotor); el('rect', { x: -22, y: 16, width: 44, height: 4, class: 'rail' }, rotor);
+      }
+      const arrow = el('g', { class: `arrow ${tone}` }, g);
+      arrow.innerHTML = chute ? '' : ARROW;
+      let bar = null;
+      if (kind === 'arm') {
+        // yellow-and-black barrier pole that swings across the closed exit
+        // pivots on the corner between the straight-on exit and the turn exit, and swings 45° between
+        // lying diagonally across the square (deflects bags into the turn) and lying along the side (bags go straight)
+        const h = c.armIn, tn = c.sw.find(d => d !== h);
+        const px = (DV[h][1] + DV[tn][1]) * 17, py = (DV[h][0] + DV[tn][0]) * 17;
+        bar = el('g', { class: 'armbar' }, g);
+        bar.innerHTML = '<rect x="-3" y="-4.5" width="36" height="9" rx="4.5" fill="#ffd23f" stroke="var(--outline)" stroke-width="2.4"/><path d="M4-4.5l-3 9M10-4.5l-3 9M16-4.5l-3 9M22-4.5l-3 9M28-4.5l-3 9" stroke="#22212b" stroke-width="2.8"/>';
+        const post = el('g', { transform: `translate(${px} ${py})` }, g);
+        el('rect', { x: -5.5, y: -5.5, width: 11, height: 11, rx: 3, fill: '#2b2d38', stroke: 'var(--outline)', 'stroke-width': 2 }, post);
+        el('circle', { r: 2.6, fill: '#ffd23f' }, post);
+        const ang = (dx, dy) => Math.atan2(dy, dx) * 180 / Math.PI;
+        c.armPose = { px, py, turn: ang(-(DV[h][1] + DV[tn][1]), -(DV[h][0] + DV[tn][0])), straight: ang(-DV[h][1], -DV[h][0]) };
+      }
+      if (tt) {
+        el('circle', { cx: 13, cy: -13, r: 5.5, class: 'ol rotdot' }, g);
+        el('path', { d: 'M10.6 -14.3a3 3 0 1 0 4.6 .9', fill: 'none', stroke: 'var(--outline)', 'stroke-width': 1.4, 'stroke-linecap': 'round' }, g);
+      }
+      tileEls.set(k, { g, arrow, rotor, bar, ang: null, bang: null });
     }
     if (c.spawn) {
       const [dr, dc] = DV[inward(k)], cx = x + U / 2, cy = y + U / 2;
       el('rect', { x: cx - dc * U - 17, y: cy - dr * U - 17, width: 34, height: 34, rx: 8, class: 'dock' }, gFloor);
-      const ghost = el('g', { transform: `translate(${cx - dc * U} ${cy - dr * U})`, class: 'nextbag', role: 'img' }, gWait);
-      previews.set(k, ghost);
+      previews.set(k, el('g', { transform: `translate(${cx - dc * U} ${cy - dr * U})`, class: 'nextbag', role: 'img' }, gWait));
     }
-    tileEls.set(k, { g, arrow, rotor, ang: null });
   });
+  // gray chutes: one continuous trough through slide and arm squares
+  const gChute = el('g', {}, svg); gTiles.before(gChute);
+  const isChute = k => k >= 0 && cell[k].t === 'b' && (cell[k].kind === 'slide' || cell[k].kind === 'arm');
+  const outs = k => { const c = cell[k]; return c.t === 'b' ? (c.conn ?? c.sw ?? [c.dir]) : c.t === 'tp' ? [c.out] : []; };
+  const segs = [];
+  [...Array(N).keys()].filter(isChute).forEach(k => {
+    const c = cell[k], ds = new Set(c.conn ?? [...c.sw, (c.armIn + 2) % 4]);
+    const cx = X(k) + U / 2, cy = Y(k) + U / 2;
+    ds.forEach(d => segs.push(`M${cx} ${cy}L${cx + DV[d][1] * U / 2} ${cy + DV[d][0] * U / 2}`));
+  });
+  if (segs.length) ['chuteol', 'chutewall', 'chutehi', 'chutebed'].forEach(cls => el('path', { d: segs.join(''), class: cls, ...(cls === 'chutebed' ? { style: `stroke:url(#${clipId}dp)` } : {}) }, gChute));
+  // long belts: one belt with slats running its whole length
+  const laneRot = new Map();
+  [...new Set(cell.filter(c => c.lane).map(c => c.lane))].forEach(id => {
+    const ks = [...Array(N).keys()].filter(k => cell[k].lane === id), horiz = rc(ks[0])[0] === rc(ks.at(-1))[0];
+    const len = ks.length * U, cx = (Math.min(...ks.map(X)) + Math.max(...ks.map(X))) / 2 + U / 2, cy = (Math.min(...ks.map(Y)) + Math.max(...ks.map(Y))) / 2 + U / 2;
+    const lg = el('g', { transform: `translate(${cx} ${cy})` }, gChute);
+    const cid = `${clipId}L${id}`;
+    const box = { x: (horiz ? -len : -U) / 2 + 0.5, y: (horiz ? -U : -len) / 2 + 0.5, width: (horiz ? len : U) - 1, height: (horiz ? U : len) - 1 };
+    el('rect', { ...box, rx: 3 }, el('clipPath', { id: cid }, defs));
+    el('rect', { ...box, rx: 3, class: `ol belt ${cell[ks[0]].blueLane ? 'blue' : 'pink'}` }, lg);
+    const cg = el('g', { 'clip-path': `url(#${cid})` }, lg), rot = el('g', {}, cg), sl = el('g', { class: 'slide' }, rot);
+    for (let i = -len / 2 - 32; i <= len / 2 + 32; i += 8) el('line', { x1: i, y1: -len / 2 - 20, x2: i, y2: len / 2 + 20, class: 'slat' }, sl);
+    if (horiz) { el('rect', { x: -len / 2, y: -20, width: len, height: 4, class: 'rail' }, cg); el('rect', { x: -len / 2, y: 16, width: len, height: 4, class: 'rail' }, cg); }
+    else { el('rect', { x: -20, y: -len / 2, width: 4, height: len, class: 'rail' }, cg); el('rect', { x: 16, y: -len / 2, width: 4, height: len, class: 'rail' }, cg); }
+    laneRot.set(id, rot);
+  });
+  // lane outlines (one long belt) and every control's click/keyboard target
+  const gHit = el('g', {}, svg); gBags.before(gHit);
+  const laneBox = ks => { const xs = ks.map(X), ys = ks.map(Y); return { x: Math.min(...xs) + 1, y: Math.min(...ys) + 1, width: Math.max(...xs) - Math.min(...xs) + U - 2, height: Math.max(...ys) - Math.min(...ys) + U - 2 }; };
+  [...new Set(cell.filter(c => c.lane).map(c => c.lane))].forEach(id => {
+    const ks = [...Array(N).keys()].filter(k => cell[k].lane === id);
+    el('rect', { ...laneBox(ks), rx: 7, class: `laneedge${cell[ks[0]].blueLane ? ' blue' : ''}` }, gHit);
+  });
+  const turnCtl = ct => { if (phase === 'over' || R.done) return; ct.set(ct.next()); drawCtl(ct); };
+  controls.forEach(ct => {
+    const t = ct.kind === 'lane' ? el('rect', { ...laneBox(ct.cells), rx: 7, class: 'lanehit' }, gHit) : tileEls.get(ct.at).g;
+    ct.el = t;
+    t.setAttribute('tabindex', '0'); t.setAttribute('role', 'button'); t.classList.add('turn');
+    t.addEventListener('click', e => { if (e.button === 0) turnCtl(ct); });
+    t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) turnCtl(ct); } });
+  });
+  const spin = (t, key, deg) => { if (t[key] === null) t[key] = deg; else t[key] += ((deg - t[key]) % 360 + 540) % 360 - 180; return t[key]; };
   const drawTile = k => {
     const c = cell[k], t = tileEls.get(k); if (!t) return;
-    const target = [270, 0, 90, 180][c.dir];
-    // turn the short way round from wherever the arrow is now
-    if (t.ang === null) t.ang = target; else { let dl = ((target - t.ang) % 360 + 540) % 360 - 180; t.ang += dl; }
-    t.arrow.style.transform = `rotate(${t.ang}deg)`;
-    t.rotor.setAttribute('transform', `rotate(${target})`);
-    if (c.rot) t.g.setAttribute('aria-label', `Turnable belt, row ${rc(k)[0] + 1} column ${rc(k)[1] + 1}, pointing ${DNAME[c.dir]}`);
+    if (c.t === 'push') { t.lamp.setAttribute('class', `lampg${c.on ? ' lit' : ''}`); t.red.setAttribute('class', `lampr${c.on ? '' : ' lit'}`); return; }
+    t.arrow.style.transform = `rotate(${spin(t, 'ang', ROT[c.dir])}deg)`;
+    t.rotor?.setAttribute('transform', `rotate(${ROT[c.dir]})`);
+    if (c.lane) laneRot.get(c.lane)?.setAttribute('transform', `rotate(${ROT[c.dir]})`);
+    if (t.bar) { const a = c.armPose, deg = c.dir === c.armIn ? a.straight : a.turn; t.bar.style.transform = `translate(${a.px}px, ${a.py}px) rotate(${spin(t, 'bang', deg)}deg)`; }
   };
-  tileEls.forEach((_, k) => drawTile(k));
+  const drawCtl = ct => {
+    ct.cells.forEach(drawTile);
+    const c = cell[ct.at], other = ct.next();
+    ct.el.setAttribute('aria-label', ct.kind === 'tile' ? `Turnable belt, ${at(ct.at)}, pointing ${DNAME[c.dir]}`
+      : ct.kind === 'arm' ? `Junction arm on a slide, ${at(ct.at)}, sending bags ${DNAME[c.dir]}; press to send them ${DNAME[other]}`
+      : ct.kind === 'lane' ? `Long blue belt, ${ct.cells.length} squares from ${at(ct.cells[0])}, running ${DNAME[c.dir]}; press to reverse it`
+      : `Pusher, ${at(ct.at)}, light ${c.on ? 'green: it will punch the next bag ' + DNAME[c.dir] : 'red: bags ride past'}`);
+  };
+  tileEls.forEach((_, k) => drawTile(k)); controls.forEach(drawCtl);
   svg.addEventListener('keydown', e => {
     const d = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[e.key];
-    const from = turnables.find(k => tileEls.get(k).g === document.activeElement);
-    if (d === undefined || from === undefined) return;
+    const from = controls.find(ct => ct.el === document.activeElement);
+    if (d === undefined || !from) return;
     e.preventDefault();
-    const [r0, c0] = rc(from), [dr, dc] = DV[d];
+    const [r0, c0] = rc(from.at), [dr, dc] = DV[d];
     let best = null, bs = Infinity;
-    for (const k of turnables) {
-      const [r, c] = rc(k), along = (r - r0) * dr + (c - c0) * dc, side = Math.abs((r - r0) * dc) + Math.abs((c - c0) * dr);
+    for (const ct of controls) {
+      const [r, c] = rc(ct.at), along = (r - r0) * dr + (c - c0) * dc, side = Math.abs((r - r0) * dc) + Math.abs((c - c0) * dr);
       if (along <= 0) continue;
-      const sc = along + side * 2; if (sc < bs) { bs = sc; best = k; }
+      const sc = along + side * 2; if (sc < bs) { bs = sc; best = ct; }
     }
-    if (best !== null) tileEls.get(best).g.focus();
+    best?.el.focus();
   });
   const renderHud = () => { const h = `<span>🧳 <b>${P.delivered}/${CF.bags}</b> bags</span>${P.restarts ? `<span>↺ ${P.restarts}</span>` : ''}`; if (hud.innerHTML !== h) hud.innerHTML = h; };
 
@@ -2157,8 +2365,9 @@ const mountBG = (id, L, pick) => {
     const col = PAL[color][0];
     el('rect', { x: -5.5, y: -15, width: 11, height: 7, rx: 3, fill: 'none', stroke: 'var(--outline)', 'stroke-width': 2.6 }, g);
     el('rect', { x: -14, y: -10, width: 28, height: 21, rx: 6, fill: col, class: 'ol' }, g);
-    el('rect', { x: -10.5, y: -7.5, width: 7, height: 3, rx: 1.5, fill: 'rgba(255,255,255,.55)' }, g);
-    el('text', { x: 0, y: 6, 'text-anchor': 'middle', 'font-size': 14, class: 'glyph' }, g).textContent = PAL[color][1];
+    el('rect', { x: -13, y: 4, width: 26, height: 6, rx: 3, fill: 'rgba(0,0,0,.22)' }, g);
+    el('rect', { x: -9, y: -11.5, width: 4, height: 4, rx: 1, fill: '#ffd23f', stroke: 'var(--outline)', 'stroke-width': 1.2 }, g);
+    el('rect', { x: 5, y: -11.5, width: 4, height: 4, rx: 1, fill: '#ffd23f', stroke: 'var(--outline)', 'stroke-width': 1.2 }, g);
   };
   const addBag = r => {
     const g = el('g', { class: 'bag' }, gBags); drawBag(r.color, g);
@@ -2189,10 +2398,20 @@ const mountBG = (id, L, pick) => {
       if (++b.age > 2 * N + 10) { b.state = 'stuck'; b.g.classList.add('bad'); return fail(`A ${b.name} bag went around in circles too long.`); }
       const c = cell[b.at];
       b.enter = false;
-      const d = c.t === 'tp' && b.via ? c.out : c.dir;
+      let d = c.t === 'tp' && b.via ? c.out : c.dir;
+      if (c.kind === 'slide') {
+        const inSide = (b.dir + 2) % 4;
+        if (!c.conn.includes(inSide)) { b.state = 'stuck'; b.g.classList.add('bad'); return fail(`A ${b.name} bag hit the wall of a slide.`); }
+        d = c.conn.find(x => x !== inSide);
+      }
+      if (c.pusher !== undefined && cell[c.pusher].on) {
+        // the pusher's light is green: punch this bag and reset to red
+        const pc = cell[c.pusher]; d = pc.dir; pc.on = false; drawTile(c.pusher); drawCtl(ctrlOf.get(c.pusher));
+        const pg = tileEls.get(c.pusher).g; pg.classList.remove('punch'); void pg.getBBox(); pg.classList.add('punch');
+      }
       const v = step(b.at, d);
       b.from = b.at; b.dir = d; b.via = false;
-      if (v < 0 || cell[v].t === 'e') { b.state = 'fall'; b.at = v < 0 ? b.at : v; b.fallDir = d; b.g.classList.add('bad'); return fail(`A ${b.name} bag rolled off the belt.`); }
+      if (v < 0 || !['b', 'bin', 'tp'].includes(cell[v].t)) { b.state = 'fall'; b.at = v < 0 ? b.at : v; b.fallDir = d; b.g.classList.add('bad'); return fail(`A ${b.name} bag ${v >= 0 && cell[v].t === 'push' ? 'crashed into a pusher' : 'rolled off the belt'}.`); }
       const cv = cell[v];
       if (cv.t === 'bin') {
         b.at = v; b.state = 'in';
@@ -2245,26 +2464,46 @@ const mountBG = (id, L, pick) => {
     if (phase === 'run' || (phase === 'over' && frac < 1)) raf = requestAnimationFrame(loop);
   };
   // belts set by a paid hint stay set up for the start of every run
-  const applyHinted = () => { P.hinted.forEach(k => { if (cell[k]?.need?.length) cell[k].dir = cell[k].need[0].d; }); tileEls.forEach((_, k) => drawTile(k)); };
+  const applyHinted = () => { P.hinted.forEach(i => { const ct = controls[i]; if (ct?.need.length) ct.set(ct.need[0].v); }); controls.forEach(drawCtl); };
   const goBtn = $(`#${id}Go`);
-  const setGo = () => { goBtn.textContent = phase === 'run' ? '⏸ Pause' : phase === 'paused' ? '▶ Resume' : '▶ Play'; goBtn.disabled = R.done || phase === 'over'; svg.classList.toggle('running', phase === 'run'); };
-  const run = () => { phase = 'run'; last = 0; if (!P.started) { P.started = true; save(); } setGo(); say('Bags are rolling. Turn the blue belts as they come.'); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); };
+  const isRush = () => id === 'ubg' && !!unl('ubg').rush;
+  const setGo = () => {
+    goBtn.textContent = phase === 'run' ? '⏸ Pause' : phase === 'paused' ? '▶ Resume' : '▶ Play'; goBtn.disabled = R.done || phase === 'over';
+    goBtn.hidden = isRush() && phase !== 'paused'; svg.classList.toggle('running', phase === 'run');
+  };
+  // Rush (Unlimited only): no Play button; the level starts rolling as soon as it is on screen
+  const autoStart = () => {
+    if (!isRush() || R.done || phase !== 'plan') return;
+    const wait = () => { if (!svg.isConnected || phase !== 'plan' || !isRush()) return; if (current === id && !document.hidden) run(); else requestAnimationFrame(wait); };
+    requestAnimationFrame(wait);
+  };
+  const run = () => { phase = 'run'; last = 0; if (!P.started) { P.started = true; save(); } setGo(); say(isRush() ? '⚡ Rush! The bags are already rolling. Fix the route before they reach the wrong place.' : 'Bags are rolling. Flip blue belts, arms and pushers as they come.'); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); };
   goBtn.addEventListener('click', e => { if (R.done || e.detail > 1) return; if (phase === 'plan' || phase === 'paused') run(); else if (phase === 'run') { phase = 'paused'; setGo(); say('Paused. You can still turn belts.'); } });
   const reset = () => {
     cancelAnimationFrame(raf); bags.forEach(b => b.g.remove()); bags = []; tick = 0; frac = 0;
-    cell.forEach((c, k) => { if (c.t === 'b') c.dir = START_DIRS[k]; if (c.g) c.g.classList.remove('bad', 'pulse'); });
+    controls.forEach((ct, i) => ct.set(START[i])); cell.forEach(c => { if (c.g) c.g.classList.remove('bad', 'pulse'); });
     applyHinted();
     P.delivered = 0; phase = 'plan'; setGo(); place(); renderHud(); renderPreview();
   };
   $(`#${id}Restart`).addEventListener('click', () => {
     if (R.done || (phase === 'plan' && !P.started)) return;
     if (P.started || phase === 'over') { R.misses += 2; P.restarts++; }
-    P.started = false; save(); reset(); say('Restarted (−10). The belts are back where they started; set them up and press Play.');
+    P.started = false; save(); reset(); say(isRush() ? 'Restarted (−10). Here they come again!' : 'Restarted (−10). The belts are back where they started; set them up and press Play.'); autoStart();
   });
   const slowBtn = $(`#${id}Slow`), fastBtn = $(`#${id}Fast`);
-  const setSpeed = f => { fast = f; slowBtn.setAttribute('aria-pressed', String(!f)); fastBtn.setAttribute('aria-pressed', String(f)); svg.style.setProperty('--belt', `${(TICK() / 4).toFixed(3)}s`); };
+  const setSpeed = f => { fast = f; slowBtn.setAttribute('aria-pressed', String(!f)); fastBtn.setAttribute('aria-pressed', String(f)); svg.style.setProperty('--belt', `${(TICK() / 5).toFixed(3)}s`); };
   slowBtn.addEventListener('click', () => setSpeed(false)); fastBtn.addEventListener('click', () => setSpeed(true));
   setSpeed(false);
+  const rushBtn = $(`#${id}Rush`);
+  if (rushBtn) {
+    const paint = () => rushBtn.setAttribute('aria-pressed', String(isRush()));
+    rushBtn.addEventListener('click', () => {
+      unl('ubg').rush = !isRush(); save(); paint(); setGo();
+      if (isRush()) { say(phase === 'plan' ? '⚡ Rush is on: levels start rolling right away.' : '⚡ Rush is on from the next level.'); autoStart(); }
+      else say(phase === 'plan' ? 'Rush is off. Set things up, then press Play.' : 'Rush is off from the next level.');
+    });
+    paint();
+  }
   const onHide = () => { if (!svg.isConnected) { document.removeEventListener('visibilitychange', onHide); return; } if (document.hidden && phase === 'run') { phase = 'paused'; setGo(); say('Paused. Press Resume to keep going.'); } };
   document.addEventListener('visibilitychange', onHide);
   handlers[id] = {
@@ -2272,21 +2511,23 @@ const mountBG = (id, L, pick) => {
       // point the next belt a bag will need, the right way
       const refund = () => { R.hints = Math.max(0, R.hints - 1); save(); renderHintBtn(id); };
       if (phase === 'over') { refund(); say('This run is over. Press Restart first, then ask for a hint.'); return; }
-      const pending = turnables.map(k => { const n = cell[k].need.find(x => x.t >= tick); return n && { k, ...n }; }).filter(Boolean).sort((a, b) => a.t - b.t);
-      const h = pending.find(n => cell[n.k].dir !== n.d);
-      if (h && !P.hinted.includes(h.k)) { P.hinted.push(h.k); save(); }
-      if (!h) { refund(); say('Every belt is already pointing the right way for what comes next.'); return; }
-      cell[h.k].dir = h.d; drawTile(h.k);
-      const t = tileEls.get(h.k).g; t.classList.remove('hinted'); void t.getBBox(); t.classList.add('hinted');
-      say(`Hint: the belt at row ${rc(h.k)[0] + 1}, column ${rc(h.k)[1] + 1} now points ${DNAME[h.d]}.`);
+      const pending = controls.map((ct, i) => { const n = ct.need.find(x => x.t >= tick); return n && { i, ct, ...n }; }).filter(Boolean).sort((a, b) => a.t - b.t);
+      const h = pending.find(n => n.ct.get() !== n.v);
+      if (h && !P.hinted.includes(h.i)) { P.hinted.push(h.i); save(); }
+      if (!h) { refund(); say('Everything is already set the right way for what comes next.'); return; }
+      h.ct.set(h.v); drawCtl(h.ct);
+      const t = h.ct.el; t.classList.remove('hinted'); void t.getBBox(); t.classList.add('hinted');
+      const what = { tile: `the belt at ${at(h.ct.at)} now points ${DNAME[h.v]}`, arm: `the junction arm at ${at(h.ct.at)} now sends bags ${DNAME[h.v]}`, lane: `the long belt from ${at(h.ct.cells[0])} now runs ${DNAME[h.v]}`, push: `the pusher at ${at(h.ct.at)} is now ${h.v ? 'green' : 'red'}` }[h.ct.kind];
+      say(`Hint: ${what}.`);
     },
   };
   GBY[id].strip = r => HINT.repeat(r.hints) + '🟥'.repeat(Math.min(10, r.prog.restarts ?? 0)) + (r.ok ? '🟩'.repeat(CF.bags) : '');
   if (!R.done) applyHinted();
   if (R.done) { phase = 'over'; P.delivered = CF.bags; say(`All ${CF.bags} bags in the right bins!`, 'win'); }
   else if (reloaded) say(`The page reloaded after a run had started, so it counted as a restart (−10). Set up the belts and press Play.`);
-  else say(P.restarts ? `Ready. Restarts so far: ${P.restarts} (−10 each). Set up the belts and press Play.` : 'Set up the blue belts, then press Play. You can keep turning belts while the bags roll.');
+  else say(P.restarts ? `Ready. Restarts so far: ${P.restarts} (−10 each). Set up the belts and press Play.` : 'Set up the blue pieces, then press Play. You can keep changing them while the bags roll.');
   setGo(); place(); renderHud(); renderPreview();
+  if (!R.done) autoStart();
 };
 safeMount(mountBG, 'bg', LVL, DAY);
 
