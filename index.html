@@ -2410,6 +2410,17 @@
       outline-offset: 3px
     }
 
+    .bgboard .thud .wallin {
+      animation: bgGulp .3s ease-out;
+      transform-origin: 0 0
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .bgboard .thud .wallin {
+        animation: none
+      }
+    }
+
     /* flagship: the baggage board gets more of the page */
     #v-bg,
     #v-ubg {
@@ -2714,7 +2725,7 @@
     UNL.forEach(b => { const u = { ...GBY[b], id: `u${b}`, base: b, unl: true, trial: false }; GAMES.push(u); GBY[u.id] = u; });
     const blankRec = () => ({ hints: 0, misses: 0, done: false, prog: null, start: null });
     // Saved progress is tied to a game version and a puzzle; anything older starts that game fresh instead of crashing.
-    const GAME_VER = { ls: 1, cs: 1, rb: 2, mm: 3, oo: 2, bg: 13 };
+    const GAME_VER = { ls: 1, cs: 1, rb: 2, mm: 3, oo: 2, bg: 14 };
     const recFor = (id, L, pick) => {
       const base = GBY[id].base ?? id, sig = `${GAME_VER[base]}:${L}:${pick}`, R = rec(id);
       if (R.sig === undefined && GAME_VER[base] === 1 && !R.broken) R.sig = sig;
@@ -4232,54 +4243,19 @@
         if (CF.conflicts && conflictCells.length < 1) return null;
         if (conflictCells.some(k => routes.some(r => { const ix = r.moves.findIndex(m => m[0] === k); return ix >= 0 && ix < 2; }))) return null;
         if (CF.tp && !routes.some(r => r.moves.some(([u]) => cell[u].t === 'tp'))) return null;
-        // timing: bag i rolls in at tick T_i; the cell on move k is visited at T_i + k
-        const T = routes.map((_, i) => (RUSH ? 2 : 2 + i * CF.gap));
-        const visits = () => routes.flatMap((r, i) => r.moves.map(([u, d], k) => ({ u, d, t: T[i] + k, i, from: k ? r.moves[k - 1][1] : -1 })));
-        for (let pass = 0; pass < 200; pass++) {
-          const v = visits(); let bad = -1;
-          for (const a of v) for (const b of v) {
-            if (a.i >= b.i || a.u !== b.u) continue;
-            const gapT = Math.abs(a.t - b.t);
-            if (RUSH ? gapT < 1 || (a.d !== b.d && gapT < 2) : gapT < 2 || (a.d !== b.d && gapT < 3)) { bad = b.i; break; }
-          }
-          if (bad < 0) break;
-          if (RUSH) return null;
-          for (let j = bad; j < T.length; j++) T[j]++;
-          if (pass === 199) return null;
-        }
-        // record each belt's needed headings in time order
-        visits().filter(x => cell[x.u].t === 'b').sort((a, b) => a.t - b.t).forEach(x => cell[x.u].need.push({ d: x.d, t: x.t, i: x.i }));
-        // which belts can be turned: every conflict belt, most turns, some straights
+        // what each square sees, from the routes alone: which ways bags leave it and which way they arrive
+        const seen = k => routes.flatMap(r => r.moves.map((m, ix) => (m[0] === k ? { d: m[1], from: ix ? r.moves[ix - 1][1] : -1 } : null)).filter(Boolean));
+        // rotator belts: every conflict belt, most turns, some straights
         [...Array(N).keys()].forEach(k => {
-          const c = cell[k]; if (c.t !== 'b' || !c.need.length) return;
-          const turn = routes.some(r => { const ix = r.moves.findIndex(m => m[0] === k); return ix > 0 && r.moves[ix - 1][1] !== r.moves[ix][1]; });
-          c.rot = !c.spawn && !c.slide && (conflictCells.includes(k) || (turn && r0() < 0.75) || r0() < 0.18);
-          c.dir = c.need[0].d;
+          const c = cell[k]; if (c.t !== 'b' || !c.dirs?.size) return;
+          const turn = seen(k).some(x => x.from >= 0 && x.from !== x.d);
+          c.rot = !c.spawn && (conflictCells.includes(k) || (turn && r0() < 0.75) || r0() < 0.18);
         });
-        // pushers: a belt that bags cross straight, where some bags must be knocked sideways
-        const isConf = k => conflictCells.includes(k);
-        let pushes = 0;
-        for (const k of shuffle([...conflictCells], r0)) {
-          if (pushes >= CF.push) break;
-          const c = cell[k], vis = visits().filter(x => x.u === k), ds = [...new Set(vis.map(x => x.d))];
-          const ins = [...new Set(vis.map(x => x.from))];
-          if (ds.length !== 2 || ins.length !== 1 || ins[0] < 0) continue;
-          const sDir = ins[0], p = ds.find(d => d !== sDir);
-          if (!ds.includes(sDir) || p === undefined || (p + 2) % 4 === sDir) continue;
-          const q = step(k, (p + 2) % 4);
-          if (q < 0 || cell[q].t !== 'e') continue;
-          cell[q] = { t: 'push', dir: p, target: k, on: false, need: vis.sort((a, b) => a.t - b.t).map(x => ({ t: x.t, v: x.d === p })) };
-          c.rot = false; c.dir = sDir; c.pusher = q; c.fixedBy = 'push'; pushes++;
-        }
-        if (CF.push && !pushes) return null;
-        // junction arms: gray slide squares that flip between exactly two exits
+        // directors (swing arms) on slides: bags arrive one way and either go straight on or turn 90°
         [...Array(N).keys()].forEach(k => {
-          const c = cell[k]; if (c.t !== 'b' || !c.rot) return;
-          const ds = [...new Set(c.need.map(n => n.d))];
-          if (ds.length > 2 || r0() >= CF.arm) return;
-          // an arm is a diagonal deflector: bags come in one way and either go straight on or turn 90°
-          const ins = [...new Set(visits().filter(v => v.u === k).map(v => v.from))];
-          if (ins.length !== 1 || ins[0] < 0) return;
+          const c = cell[k]; if (c.t !== 'b' || !c.rot || r0() >= CF.arm) return;
+          const sv = seen(k), ds = [...new Set(sv.map(x => x.d))], ins = [...new Set(sv.map(x => x.from))];
+          if (ds.length > 2 || ins.length !== 1 || ins[0] < 0) return;
           const h = ins[0], perp = d => d % 2 !== h % 2;
           if (ds.some(d => d !== h && !perp(d))) return;
           let pair;
@@ -4288,8 +4264,54 @@
           else pair = [ds[0], h];
           c.kind = 'arm'; c.sw = pair; c.armIn = h;
         });
+        // slides: fixed squares every bag crosses the same way; they join two sides and carry bags at 3× speed
+        [...Array(N).keys()].forEach(k => {
+          const c = cell[k]; if (c.t !== 'b' || c.rot || c.spawn || c.kind || conflictCells.includes(k)) return;
+          const sv = seen(k), ins = [...new Set(sv.map(x => x.from))];
+          if (!sv.length || ins.length !== 1 || ins[0] < 0 || sv.some(x => x.d === (ins[0] + 2) % 4)) return; // no U-turns on a slide
+          if (r0() < CF.gray || [0, 1, 2, 3].some(d => cell[step(k, d)]?.kind === 'arm')) { c.kind = 'slide'; c.conn = [(ins[0] + 2) % 4, sv[0].d]; }
+        });
+        // timing in steps (a third of a tick): a belt square takes 3 steps to cross, a slide square 1
+        const cost = k => (cell[k].kind === 'slide' ? 1 : 3);
+        const T = routes.map((_, i) => (RUSH ? 6 : 6 + i * CF.gap * 3));
+        // a bag appears at T_i, decides at each square once it has crossed it; t = decision step - 1
+        const visits = () => routes.flatMap((r, i) => { let D = T[i] + 3; return r.moves.map(([u, d], k) => { const v = { u, d, t: D - 1, i, from: k ? r.moves[k - 1][1] : -1 }; const nx = r.moves[k + 1]; if (nx) D += cost(nx[0]); return v; }); });
+        for (let pass = 0; pass < 200; pass++) {
+          const v = visits(); let bad = -1;
+          for (const a of v) for (const b of v) {
+            if (a.i >= b.i || a.u !== b.u) continue;
+            const gapT = Math.abs(a.t - b.t);
+            if (RUSH ? gapT < 3 || (a.d !== b.d && gapT < 6) : gapT < 6 || (a.d !== b.d && gapT < 9)) { bad = b.i; break; }
+          }
+          if (bad < 0) break;
+          if (RUSH) return null;
+          for (let j = bad; j < T.length; j++) T[j] += 3;
+          if (pass === 199) return null;
+        }
+        // record each belt's needed headings in time order
+        visits().filter(x => cell[x.u].t === 'b').sort((a, b) => a.t - b.t).forEach(x => cell[x.u].need.push({ d: x.d, t: x.t, i: x.i }));
+        [...Array(N).keys()].forEach(k => { const c = cell[k]; if (c.t === 'b' && c.need.length) c.dir = c.need[0].d; });
+        // pushers: a belt that bags cross straight, where some bags must be knocked sideways
+        const isConf = k => conflictCells.includes(k);
+        let pushes = 0;
+        for (const k of shuffle([...conflictCells], r0)) {
+          if (pushes >= CF.push) break;
+          if (cell[k].kind === 'arm') continue;
+          const c = cell[k], vis = visits().filter(x => x.u === k), ds = [...new Set(vis.map(x => x.d))];
+          const ins = [...new Set(vis.map(x => x.from))];
+          if (ds.length !== 2 || ins.length !== 1 || ins[0] < 0) continue;
+          const sDir = ins[0], p = ds.find(d => d !== sDir);
+          if (!ds.includes(sDir) || p === undefined || (p + 2) % 4 === sDir) continue;
+          const q = step(k, (p + 2) % 4);
+          if (q < 0 || cell[q].t !== 'e') continue;
+          const need = vis.sort((a, b) => a.t - b.t).map(x => ({ t: x.t, v: x.d === p }));
+          const auto = need.every(n => n.v) && r0() < 0.6; // automatic pushers never switch off
+          cell[q] = { t: 'push', dir: p, target: k, on: auto, auto, need };
+          c.rot = false; c.dir = sDir; c.pusher = q; c.fixedBy = 'push'; pushes++;
+        }
+        if (CF.push && !pushes) return null;
         // long lanes: straight runs of fixed belts that all bags cross the same way
-        const fixedB = k => k >= 0 && cell[k].t === 'b' && !cell[k].rot && !cell[k].spawn && !cell[k].lane && (!isConf(k) || cell[k].pusher !== undefined);
+        const fixedB = k => k >= 0 && cell[k].t === 'b' && !cell[k].rot && !cell[k].spawn && !cell[k].lane && !cell[k].kind && (!isConf(k) || cell[k].pusher !== undefined);
         let laneId = 0;
         for (const k of shuffle([...Array(N).keys()], r0)) {
           if (laneId >= CF.lanes || !fixedB(k)) continue;
@@ -4303,13 +4325,7 @@
         // everything else that turns is a single blue tile; fixed squares are pink, some of them gray slides
         [...Array(N).keys()].forEach(k => {
           const c = cell[k]; if (c.t !== 'b' || c.kind) return;
-          if (c.rot) c.kind = 'tile';
-          else {
-            const vis = visits().filter(v => v.u === k), ins = [...new Set(vis.map(v => v.from))];
-            const ok = !c.spawn && ins.length === 1 && ins[0] >= 0 && (r0() < CF.gray || [0, 1, 2, 3].some(d => cell[step(k, d)]?.kind === 'arm'));
-            c.kind = ok ? 'slide' : 'fix';
-            if (ok) c.conn = [(ins[0] + 2) % 4, c.dir]; // a slide joins the side bags come in by and the side they leave by, both ways
-          }
+          c.kind = c.rot ? 'tile' : 'fix';
         });
         // decoy belts branching off turnable belts, ending at a wrong bin or the edge
         for (let t = 0; t < CF.decoys; t++) {
@@ -4326,6 +4342,7 @@
             cell[u] = { t: 'b', dir: nd, rot: rt, need: [], decoy: true, kind: rt ? 'tile' : sl ? 'slide' : 'fix', ...(sl ? { conn: [(d + 2) % 4, nd] } : {}) };
             d = nd; u = step(u, d);
           }
+          if (u >= 0 && cell[u].t === 'e' && r0() < 0.5) cell[u] = { t: 'wall' }; // barrier: bags bounce off it
         }
         // scramble everything the player controls
         [...Array(N).keys()].forEach(k => {
@@ -4337,7 +4354,7 @@
           const run = [...Array(N).keys()].filter(k => cell[k].lane === id);
           if (cell[run[0]].blueLane) run.forEach(k => { cell[k].dir = (cell[k].dir + 2) % 4; });
         }
-        const controllable = cell.some(c => (c.kind === 'tile' || c.kind === 'arm') && c.need.length) || cell.some(c => c.t === 'push') || cell.some(c => c.blueLane && c.need.length);
+        const controllable = cell.some(c => (c.kind === 'tile' || c.kind === 'arm') && c.need.length) || cell.some(c => c.t === 'push' && !c.auto) || cell.some(c => c.blueLane && c.need.length);
         if (!controllable) return null;
         return { cell, pair, routes, T, spawns, bins };
       };
@@ -4349,7 +4366,7 @@
       [...Array(N).keys()].forEach(k => {
         const c = cell[k];
         if (c.t === 'b' && (c.kind === 'tile' || c.kind === 'arm')) controls.push({ kind: c.kind, at: k, cells: [k], need: c.need.map(n => ({ t: n.t, v: n.d })), get: () => c.dir, set: v => { c.dir = v; }, next: () => (c.kind === 'arm' ? (c.dir === c.sw[0] ? c.sw[1] : c.sw[0]) : (c.dir + 1) % 4) });
-        if (c.t === 'push') controls.push({ kind: 'push', at: k, cells: [k], need: c.need, get: () => c.on, set: v => { c.on = v; }, next: () => !c.on });
+        if (c.t === 'push' && !c.auto) controls.push({ kind: 'push', at: k, cells: [k], need: c.need, get: () => c.on, set: v => { c.on = v; }, next: () => !c.on });
       });
       [...new Set(cell.filter(c => c.blueLane).map(c => c.lane))].forEach(id => {
         const ks = [...Array(N).keys()].filter(k => cell[k].lane === id), c0 = cell[ks[0]];
@@ -4361,7 +4378,7 @@
 
       GBY[id].blurb = `${ROWS}×${COLS} · ${plural(CF.bags, 'bag')}${CF.tp ? ` · ${plural(CF.tp, 'teleport')}` : ''}`;
       makeSection(id, 'Logic · real-time', 'Baggage Maze', `<button type="button" class="btn" id="${id}Restart">↺ Restart</button><button type="button" class="btn primary" id="${id}Go">▶ Play</button>`);
-      $(`#${id}Rules`).innerHTML = `Get every suitcase into the <b>bin of its color</b>. Bags wait outside the grid and roll in by number; on harder days several move at once. <b>Blue pieces change, pink and gray ones don’t.</b> A small blue tile turns to any of the four directions. A long blue belt reverses when tapped. On gray slides a bag can’t change course (it rides to the other end, and bounces back if that end is closed), except where a <b>junction arm</b> (striped bar) blocks one exit: tap it to swing it to the other. A <b>pusher</b> with its light on green punches every bag that passes in front of it onto whatever is ahead, until you tap it back to red.${CF.tp ? ' <b>Teleport pads</b> with the same symbol are linked; a bag pops out of the twin and leaves the way its little arrow points.' : ''} Set things up, press <b>Play</b>, and keep changing pieces while bags roll. <b>One wrong bin, or a bag rolling off the belts, ends the run.</b> Restart costs 10. 🐢 and 🐇 switch speed.`;
+      $(`#${id}Rules`).innerHTML = `Sort every suitcase into the <b>bin of its color</b>. A bag in the wrong bin, or one that falls off the belts, means starting the level over. <b>Blue pieces change; red and gray ones don’t.</b> <b>Rotator belts</b> (small blue squares) turn to any of the four directions when tapped. <b>Blue belts</b> run the other way when tapped; <b>red belts</b> only go the way their arrows point. <b>Slides</b> carry bags at three times the speed, either way along the slide, and bags bounce back off a closed end. <b>Directors</b> (striped swing arms) open one path and close the other; tap to swing them. <b>Manual pushers</b> have a red and a green light: tap to turn one green and it punches every bag that passes in front of it until you tap it off. <b>Automatic pushers</b> have a single green light and are always on. <b>Barriers</b> are dead ends that bags bounce off.${CF.tp ? ' A bag that drops into a <b>chute</b> pops out of the chute with the same symbol, leaving the way its little arrow points.' : ''} Bags wait outside the grid and roll in by number; on harder days several move at once. Set things up, press <b>Play</b>, and keep changing pieces while bags roll. Restart costs 10. 🐢 and 🐇 switch speed.`;
 
       // ---- state
       const R = recFor(id, L, pick); R.prog ??= { delivered: 0, restarts: 0, started: false, best: 0 };
@@ -4369,8 +4386,10 @@
       P.hinted ??= [];
       let reloaded = false;
       if (!R.done) { P.delivered = 0; if (P.started) { R.misses += 2; P.restarts++; P.started = false; reloaded = true; } save(); }
-      let phase = 'plan', tick = 0, frac = 0, bags = [], raf = 0, last = 0, fast = false, used = cell.map(() => 0);
-      const TICK = () => (fast ? 0.55 : 1.1);
+      let phase = 'plan', tick = 0, stepFrac = 0, bags = [], raf = 0, last = 0, fast = false, used = cell.map(() => 0);
+      const TICK = () => (fast ? 0.55 : 1.1); // seconds to cross one belt square; a step is a third of that
+      const STEP = () => TICK() / 3;
+      const COST = k => (cell[k]?.kind === 'slide' ? 1 : 3);
       const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       // ---- drawing (SVG, 40 units per square with a margin for spawn chutes)
@@ -4380,7 +4399,7 @@
       const bar = document.createElement('div'); bar.className = 'bgbar';
       bar.innerHTML = `<span class="bghud" aria-live="off"></span><span class="speed" role="group" aria-label="Speed"><button type="button" id="${id}Slow" aria-pressed="true">🐢 Slow</button><button type="button" id="${id}Fast" aria-pressed="false">🐇 Fast</button></span>${id === 'ubg' ? `<button type="button" class="rushbtn" id="${id}Rush" aria-pressed="false" title="Rush: levels start already running, like the original">⚡ Rush</button>` : ''}`;
       const hud = bar.firstChild;
-      const svg = el('svg', { viewBox: `0 0 ${VW} ${VH}`, class: 'bgboard', role: 'group', 'aria-label': 'Baggage belts. Tab to a blue belt, junction arm or pusher and press Enter to change it; arrow keys move between them.' });
+      const svg = el('svg', { viewBox: `0 0 ${VW} ${VH}`, class: 'bgboard', role: 'group', 'aria-label': 'Baggage belts. Tab to a blue piece (rotator, blue belt, director or manual pusher) and press Enter to change it; arrow keys move between them.' });
       $(`#${id}Play`).append(bar, svg);
       const clipId = `${id}Clip${Math.random().toString(36).slice(2, 7)}`;
       const defs = el('defs', {}, svg);
@@ -4415,13 +4434,21 @@
           g.setAttribute('aria-label', `${name} bin`); g.setAttribute('role', 'img'); g.classList.add('bin');
           c.g = g; return;
         }
+        if (c.t === 'wall') {
+          // barrier: a striped block; bags bounce off it
+          const w = el('g', { class: 'wallin' }, g);
+          el('rect', { x: -17, y: -17, width: 34, height: 34, rx: 5, fill: '#e2394b', class: 'ol' }, w);
+          el('rect', { x: -12, y: -12, width: 24, height: 24, rx: 3, fill: `url(#${clipId}hz)`, stroke: 'var(--outline)', 'stroke-width': 1.6 }, w);
+          g.setAttribute('aria-label', 'barrier: bags bounce off it'); g.setAttribute('role', 'img');
+          tileEls.set(k, { g }); return;
+        }
         if (c.t === 'tp') {
           el('rect', { x: -19, y: -19, width: 38, height: 38, rx: 4, fill: '#6f7383', class: 'ol' }, g);
           el('rect', { x: -14, y: -14, width: 28, height: 28, rx: 3, class: 'tpbase' }, g);
           el('circle', { r: 10.5, class: 'tpring' }, g);
           el('text', { x: 0, y: 6, 'text-anchor': 'middle', 'font-size': 16, class: 'tpl', 'aria-hidden': 'true' }, g).textContent = TPSYM[c.sym];
           el('path', { d: 'M13 -7L21 0L13 7Z', class: 'ol tpout', transform: `rotate(${ROT[c.out]})` }, g);
-          g.setAttribute('aria-label', `teleport pad ${TPSYM[c.sym]}, bags come out of its twin; this pad sends bags ${DNAME[c.out]}`); g.setAttribute('role', 'img');
+          g.setAttribute('aria-label', `chute ${TPSYM[c.sym]}: a bag that drops in pops out of the other ${TPSYM[c.sym]} chute; bags leave this one heading ${DNAME[c.out]}`); g.setAttribute('role', 'img');
           return;
         }
         if (c.t === 'push') {
@@ -4432,7 +4459,8 @@
           el('rect', { x: -19.5, y: -19.5, width: 30, height: 39, rx: 6, class: 'ol pushbody' }, body);
           el('rect', { x: -19.5, y: -19.5, width: 7, height: 39, rx: 3, fill: `url(#${clipId}hz)`, stroke: 'var(--outline)', 'stroke-width': 2 }, body);
           el('rect', { x: -10, y: -16, width: 17, height: 32, rx: 6, fill: '#22212b', stroke: 'var(--outline)', 'stroke-width': 2 }, body);
-          const red = el('circle', { cx: -1.5, cy: -7.5, r: 5.6, class: 'lampr' }, body), lamp = el('circle', { cx: -1.5, cy: 7.5, r: 5.6, class: 'lampg' }, body);
+          const red = c.auto ? null : el('circle', { cx: -1.5, cy: -7.5, r: 5.6, class: 'lampr' }, body), lamp = el('circle', { cx: -1.5, cy: c.auto ? 0 : 7.5, r: c.auto ? 7 : 5.6, class: 'lampg' }, body);
+          if (c.auto) { g.setAttribute('role', 'img'); g.setAttribute('aria-label', `Automatic pusher, ${at(k)}: always on, it punches every bag that passes ${DNAME[c.dir]}`); }
           tileEls.set(k, { g, lamp, red, body });
         } else {
           const kind = c.kind ?? 'fix', lane = kind === 'lane', tt = kind === 'tile', chute = kind === 'slide' || kind === 'arm';
@@ -4532,7 +4560,8 @@
       const spin = (t, key, deg) => { if (t[key] === null) t[key] = deg; else t[key] += ((deg - t[key]) % 360 + 540) % 360 - 180; return t[key]; };
       const drawTile = k => {
         const c = cell[k], t = tileEls.get(k); if (!t) return;
-        if (c.t === 'push') { t.lamp.setAttribute('class', `lampg${c.on ? ' lit' : ''}`); t.red.setAttribute('class', `lampr${c.on ? '' : ' lit'}`); return; }
+        if (c.t === 'push') { t.lamp.setAttribute('class', `lampg${c.on ? ' lit' : ''}`); t.red?.setAttribute('class', `lampr${c.on ? '' : ' lit'}`); return; }
+        if (c.t === 'wall') return;
         t.arrow.style.transform = `rotate(${spin(t, 'ang', ROT[c.dir])}deg)`;
         t.rotor?.setAttribute('transform', `rotate(${ROT[c.dir]})`);
         if (c.lane) laneRot.get(c.lane)?.setAttribute('transform', `rotate(${ROT[c.dir]})`);
@@ -4541,10 +4570,10 @@
       const drawCtl = ct => {
         ct.cells.forEach(drawTile);
         const c = cell[ct.at], other = ct.next();
-        ct.el.setAttribute('aria-label', ct.kind === 'tile' ? `Turnable belt, ${at(ct.at)}, pointing ${DNAME[c.dir]}`
-          : ct.kind === 'arm' ? `Junction arm on a slide, ${at(ct.at)}, sending bags ${DNAME[c.dir]}; press to send them ${DNAME[other]}`
-            : ct.kind === 'lane' ? `Long blue belt, ${ct.cells.length} squares from ${at(ct.cells[0])}, running ${DNAME[c.dir]}; press to reverse it`
-              : `Pusher, ${at(ct.at)}, light ${c.on ? 'green: it punches every passing bag ' + DNAME[c.dir] : 'red: bags ride past'}`);
+        ct.el.setAttribute('aria-label', ct.kind === 'tile' ? `Rotator belt, ${at(ct.at)}, pointing ${DNAME[c.dir]}`
+          : ct.kind === 'arm' ? `Director (swing arm) on a slide, ${at(ct.at)}, sending bags ${DNAME[c.dir]}; press to send them ${DNAME[other]}`
+            : ct.kind === 'lane' ? `Blue belt, ${ct.cells.length} squares from ${at(ct.cells[0])}, running ${DNAME[c.dir]}; press to reverse it`
+              : `Manual pusher, ${at(ct.at)}, light ${c.on ? 'green: it punches every passing bag ' + DNAME[c.dir] : 'red: bags ride past'}`);
       };
       tileEls.forEach((_, k) => drawTile(k)); controls.forEach(drawCtl);
       svg.addEventListener('keydown', e => {
@@ -4575,7 +4604,7 @@
       };
       const addBag = r => {
         const g = el('g', { class: 'bag' }, gBags); drawBag(r.color, g);
-        return { at: r.spawn, from: r.spawn, enter: true, dir: inward(r.spawn), color: r.color, name: PAL[r.color][2], g, via: false, state: 'roll', age: 0 };
+        return { t0: tick, next: tick + 3, at: r.spawn, from: r.spawn, enter: true, dir: inward(r.spawn), color: r.color, name: PAL[r.color][2], g, via: false, state: 'roll', age: 0 };
       };
       // the next bag waiting at each entrance
       const renderPreview = () => previews.forEach((g, k) => {
@@ -4600,7 +4629,7 @@
       const advance = () => {
         tick++;
         for (const b of bags) {
-          if (b.state !== 'roll') continue;
+          if (b.state !== 'roll' || tick < b.next) continue;
           // a bag can circle on a loop of belts for a while, but not forever
           if (++b.age > 2 * N + 10) { b.state = 'stuck'; b.g.classList.add('bad'); return fail(`A ${b.name} bag went around in circles too long.`); }
           const c = cell[b.at];
@@ -4612,15 +4641,19 @@
             d = c.conn.find(x => x !== inSide);
           }
           if (c.pusher !== undefined && cell[c.pusher].on) {
-            // the pusher's light is green: punch this bag (it stays on until the player switches it off)
+            // the pusher's light is green: punch this bag (manual ones stay on until switched off; automatic ones always)
             const pc = cell[c.pusher]; d = pc.dir;
             const pg = tileEls.get(c.pusher).g; pg.classList.remove('punch'); void pg.getBBox(); pg.classList.add('punch');
           }
           let v = step(b.at, d);
-          // at the closed end of a slide (or a slide it doesn't join) the bag bounces and rides back the way it came
+          // barriers, and the closed end of a slide, bounce the bag back the way it came
+          const wall = v >= 0 && cell[v].t === 'wall';
           const endOfChute = (v < 0 || !['b', 'bin', 'tp'].includes(cell[v].t) || (isChute(v) && !sides(v).has((d + 2) % 4)));
-          if ((c.kind === 'slide' || c.kind === 'arm') && !(c.t === 'tp' && b.via) && endOfChute) { d = (b.dir + 2) % 4; v = step(b.at, d); b.bounce = true; }
-          b.from = b.at; b.dir = d; b.via = false;
+          if (wall || ((c.kind === 'slide' || c.kind === 'arm') && !(c.t === 'tp' && b.via) && endOfChute)) {
+            if (wall) { const wg = tileEls.get(v)?.g; if (wg) { wg.classList.remove('thud'); void wg.getBBox(); wg.classList.add('thud'); } }
+            d = (d + 2) % 4; v = step(b.at, d);
+          }
+          b.from = b.at; b.dir = d; b.via = false; b.t0 = tick; b.next = tick + 3;
           if (v < 0 || !['b', 'bin', 'tp'].includes(cell[v].t)) { b.state = 'fall'; b.at = v < 0 ? b.at : v; b.fallDir = d; b.g.classList.add('bad'); return fail(`A ${b.name} bag ${v >= 0 && cell[v].t === 'push' ? 'crashed into a pusher' : 'rolled off the belt'}.`); }
           const cv = cell[v];
           if (cv.t === 'bin') {
@@ -4631,7 +4664,7 @@
             continue;
           }
           if (cv.t === 'tp') { b.at = pair.get(v); b.via = true; b.tpFrom = v; continue; }
-          b.at = v;
+          b.at = v; b.next = tick + COST(v);
         }
         routes.forEach((r, i) => { if (T[i] === tick) bags.push(addBag(r)); }); // new bags appear after everyone else has moved
         renderPreview();
@@ -4641,6 +4674,7 @@
         bags.forEach(b => {
           if (!b.g.isConnected) return;
           let x, y, sc = 1, op = 1;
+          const frac = Math.max(0, Math.min(1, (tick + stepFrac - b.t0) / Math.max(1, b.next - b.t0)));
           const fx = X(b.from) + U / 2, fy = Y(b.from) + U / 2;
           const target = b.state === 'fall' && b.at === b.from ? null : b.at;
           if (b.enter) { const [dr, dc] = DV[inward(b.at)]; x = fx - dc * U * (1 - frac); y = fy - dr * U * (1 - frac); }
@@ -4662,16 +4696,16 @@
         if (phase === 'run' && (current !== id || document.hidden)) { phase = 'paused'; setGo(); say('Paused. Press Resume to keep going.'); }
         const dt = Math.min(0.05, last ? (ts - last) / 1000 : 0); last = ts;
         if (phase === 'run') {
-          frac += dt / TICK();
-          while (frac >= 1 && phase === 'run') {
-            frac -= 1;
-            bags = bags.filter(b => { if (b.state !== 'roll') { b.g.remove(); return false; } return true; });
+          stepFrac += dt / STEP();
+          while (stepFrac >= 1 && phase === 'run') {
+            stepFrac -= 1;
+            bags = bags.filter(b => { if (b.state !== 'roll' && tick >= b.next) { b.g.remove(); return false; } return true; });
             advance();
           }
         }
-        if (phase === 'over') frac = Math.min(1, frac + dt / TICK());
+        if (phase === 'over') stepFrac = Math.min(3, stepFrac + dt / STEP());
         place(); renderHud();
-        if (phase === 'run' || (phase === 'over' && frac < 1)) raf = requestAnimationFrame(loop);
+        if (phase === 'run' || (phase === 'over' && stepFrac < 3)) raf = requestAnimationFrame(loop);
       };
       // belts set by a paid hint stay set up for the start of every run
       const applyHinted = () => { P.hinted.forEach(i => { const ct = controls[i]; if (ct?.need.length) ct.set(ct.need[0].v); }); controls.forEach(drawCtl); };
@@ -4687,10 +4721,10 @@
         const wait = () => { if (!svg.isConnected || phase !== 'plan' || !isRush()) return; if (current === id && !document.hidden) run(); else requestAnimationFrame(wait); };
         requestAnimationFrame(wait);
       };
-      const run = () => { phase = 'run'; last = 0; if (!P.started) { P.started = true; save(); } setGo(); say(isRush() ? '⚡ Rush! The bags are already rolling. Fix the route before they reach the wrong place.' : 'Bags are rolling. Flip blue belts, arms and pushers as they come.'); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); };
+      const run = () => { phase = 'run'; last = 0; if (!P.started) { P.started = true; save(); } setGo(); say(isRush() ? '⚡ Rush! The bags are already rolling. Fix the route before they reach the wrong place.' : 'Bags are rolling. Flip rotators, belts, directors and pushers as they come.'); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); };
       goBtn.addEventListener('click', e => { if (R.done || e.detail > 1) return; if (phase === 'plan' || phase === 'paused') run(); else if (phase === 'run') { phase = 'paused'; setGo(); say('Paused. You can still turn belts.'); } });
       const reset = () => {
-        cancelAnimationFrame(raf); bags.forEach(b => b.g.remove()); bags = []; tick = 0; frac = 0;
+        cancelAnimationFrame(raf); bags.forEach(b => b.g.remove()); bags = []; tick = 0; stepFrac = 0;
         controls.forEach((ct, i) => ct.set(START[i])); cell.forEach(c => { if (c.g) c.g.classList.remove('bad', 'pulse'); });
         applyHinted();
         P.delivered = 0; phase = 'plan'; setGo(); place(); renderHud(); renderPreview();
