@@ -4635,10 +4635,14 @@
           const c = cell[b.at];
           b.enter = false;
           let d = c.t === 'tp' && b.via ? c.out : c.dir;
-          if (c.kind === 'slide') {
-            const inSide = (b.dir + 2) % 4;
-            if (!c.conn.includes(inSide)) { b.state = 'stuck'; b.g.classList.add('bad'); return fail(`A ${b.name} bag hit the wall of a slide.`); }
-            d = c.conn.find(x => x !== inSide);
+          const inSide = (b.dir + 2) % 4, back = inSide; // the side the bag came in by; bouncing sends it back out that way
+          if (c.kind === 'slide') d = c.conn.includes(inSide) ? c.conn.find(x => x !== inSide) : back; // a slide's side wall bounces it
+          if (c.kind === 'arm') {
+            // a director joins two sides of its square, whichever way the bag arrives:
+            // swung straight it joins the entry side and the straight-on side; swung across it joins the entry side and the turn side.
+            // a bag that arrives at a side the arm has closed off bounces back.
+            const A = (c.armIn + 2) % 4, open = c.dir; // the open exit as seen from the entry side
+            d = inSide === A ? open : inSide === open ? A : back;
           }
           if (c.pusher !== undefined && cell[c.pusher].on) {
             // the pusher's light is green: punch this bag (manual ones stay on until switched off; automatic ones always)
@@ -4649,9 +4653,9 @@
           // barriers, and the closed end of a slide, bounce the bag back the way it came
           const wall = v >= 0 && cell[v].t === 'wall';
           const endOfChute = (v < 0 || !['b', 'bin', 'tp'].includes(cell[v].t) || (isChute(v) && !sides(v).has((d + 2) % 4)));
-          if (wall || ((c.kind === 'slide' || c.kind === 'arm') && !(c.t === 'tp' && b.via) && endOfChute)) {
+          if (wall || ((c.kind === 'slide' || c.kind === 'arm') && endOfChute)) {
             if (wall) { const wg = tileEls.get(v)?.g; if (wg) { wg.classList.remove('thud'); void wg.getBBox(); wg.classList.add('thud'); } }
-            d = (d + 2) % 4; v = step(b.at, d);
+            d = c.t === 'tp' && b.via ? (d + 2) % 4 : back; v = step(b.at, d); // bounce back the way it came
           }
           b.from = b.at; b.dir = d; b.via = false; b.t0 = tick; b.next = tick + 3;
           if (v < 0 || !['b', 'bin', 'tp'].includes(cell[v].t)) { b.state = 'fall'; b.at = v < 0 ? b.at : v; b.fallDir = d; b.g.classList.add('bad'); return fail(`A ${b.name} bag ${v >= 0 && cell[v].t === 'push' ? 'crashed into a pusher' : 'rolled off the belt'}.`); }
