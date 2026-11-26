@@ -1645,8 +1645,8 @@
       border-radius: 24px
     }
 
-    .view>div:has(>.rules),
-    .view>p.rules {
+    .view>p.rules,
+    .howto {
       background: var(--surface);
       border: 3px solid var(--outline);
       border-radius: 20px;
@@ -1654,8 +1654,17 @@
       box-shadow: var(--pop-sm)
     }
 
-    .tag,
-    .view>div:has(>.rules) .tag {
+    .howto h3 {
+      margin: 0 0 4px;
+      font-size: 1.05rem
+    }
+
+    .howto .rules {
+      margin: 0;
+      max-width: none
+    }
+
+    .tag {
       color: var(--accent-text)
     }
 
@@ -2388,28 +2397,6 @@
       }
     }
 
-    .rushbtn {
-      font: 600 .98rem var(--display);
-      border: 2.5px solid var(--outline);
-      border-radius: 999px;
-      background: var(--surface);
-      color: var(--ink);
-      padding: 8px 14px;
-      min-height: 42px;
-      cursor: pointer;
-      box-shadow: var(--pop-sm)
-    }
-
-    .rushbtn[aria-pressed="true"] {
-      background: #ff5d3a;
-      color: #fff
-    }
-
-    .rushbtn:focus-visible {
-      outline: 3px solid var(--accent);
-      outline-offset: 3px
-    }
-
     .bgboard .thud .wallin {
       animation: bgGulp .3s ease-out;
       transform-origin: 0 0
@@ -2417,6 +2404,88 @@
 
     @media (prefers-reduced-motion:reduce) {
       .bgboard .thud .wallin {
+        animation: none
+      }
+    }
+
+    dialog.tut {
+      width: min(92vw, 440px);
+      border: 3px solid var(--outline);
+      border-radius: 24px;
+      padding: 18px 20px 16px;
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 6px 0 var(--outline)
+    }
+
+    dialog.tut::backdrop {
+      background: rgba(20, 18, 50, .55)
+    }
+
+    dialog.tut h2 {
+      margin: 2px 0 8px;
+      font-size: 1.5rem
+    }
+
+    dialog.tut .tag {
+      margin: 0
+    }
+
+    .tutbody {
+      font-size: 1.02rem;
+      line-height: 1.5
+    }
+
+    .tutpic {
+      display: flex;
+      justify-content: center;
+      margin: 4px 0 10px
+    }
+
+    .tutpic svg {
+      width: 100%;
+      max-width: 260px;
+      max-height: 200px;
+      border-radius: 14px;
+      background: #3b3d47
+    }
+
+    .tutdots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin: 12px 0 4px
+    }
+
+    .tutdots i {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      border: 2px solid var(--outline);
+      background: var(--surface)
+    }
+
+    .tutdots i.on {
+      background: var(--sun)
+    }
+
+    .tutbtns {
+      justify-content: flex-end;
+      margin-top: 8px
+    }
+
+    .bgboard .intro {
+      animation: bgIntro .7s ease-in-out 4
+    }
+
+    @keyframes bgIntro {
+      50% {
+        opacity: .35
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .bgboard .intro {
         animation: none
       }
     }
@@ -2600,7 +2669,6 @@
         <div>
           <p class="tag">Logic · spatial</p>
           <h2 id="flH" tabindex="-1">Fault Lines</h2>
-          <p class="rules" id="flRules"></p>
         </div>
         <div class="board">
           <svg id="flSvg" viewBox="0 0 336 336" tabindex="0" role="application" aria-roledescription="puzzle grid"
@@ -2613,6 +2681,10 @@
               id="flCheck">Check</button></div>
           <div class="result" data-g="fl" hidden></div>
         </div>
+        <div class="howto">
+          <h3>How to play</h3>
+          <p class="rules" id="flRules"></p>
+        </div>
       </section>
 
       <!-- CHAIN -->
@@ -2621,7 +2693,6 @@
         <div>
           <p class="tag">Words</p>
           <h2 id="crH" tabindex="-1">Chain Reaction</h2>
-          <p class="rules" id="crRules"></p>
         </div>
         <div class="board">
           <div class="chain" id="chain"></div>
@@ -2629,6 +2700,10 @@
           <div class="actions" id="crBtns"><button type="button" class="btn hb" data-g="cr"></button><button
               type="button" class="btn primary" id="crSubmit">Submit</button></div>
           <div class="result" data-g="cr" hidden></div>
+        </div>
+        <div class="howto">
+          <h3>How to play</h3>
+          <p class="rules" id="crRules"></p>
         </div>
       </section>
 
@@ -2638,7 +2713,6 @@
         <div>
           <p class="tag">Route planning</p>
           <h2 id="pfH" tabindex="-1">Pathfinder</h2>
-          <p class="rules" id="pfRules"></p>
         </div>
         <div class="board">
           <div id="pfBoard" tabindex="0" role="application" aria-roledescription="puzzle grid"
@@ -2654,6 +2728,10 @@
               type="button" class="btn" id="pfUndo">Undo</button><button type="button" class="btn" id="pfReset">Start
               over</button></div>
           <div class="result" data-g="pf" hidden></div>
+        </div>
+        <div class="howto">
+          <h3>How to play</h3>
+          <p class="rules" id="pfRules"></p>
         </div>
       </section>
 
@@ -2716,7 +2794,7 @@
       { id: 'oo', name: 'Odd One Out', icon: '🔍', miss: 5, free: 0, trial: true },
       { id: 'rb', name: 'Road Block', icon: '🚗', miss: 2, free: 0, trial: true },
       { id: 'cs', name: 'Color Sort', icon: '🧪', miss: 3, free: 0, trial: true },
-      { id: 'bg', name: 'Baggage Maze', icon: '🧳', miss: 5, free: 0, trial: true },
+      { id: 'bg', name: 'Baggage Maze', icon: '🧳', miss: 5, free: 0, pause: 5, trial: true },
     ];
     const CORE = GAMES.filter(g => !g.trial);
     const GBY = Object.fromEntries(GAMES.map(g => [g.id, g]));
@@ -2772,16 +2850,17 @@
       r.done = true; r.ok = ok;
       r.time = Math.max(1, Math.round((Date.now() - (r.start ?? Date.now())) / 1000));
       const extra = Math.max(0, r.misses - def.free);
-      r.score = ok ? Math.max(10, 100 - 15 * r.hints - def.miss * extra) : 0;
-      r.stars = !ok ? 0 : (r.hints === 0 && extra === 0 ? 3 : r.score >= 70 ? 2 : 1);
+      const paused = def.pause ? r.pauses ?? 0 : 0; // games with a Pause button: every press during play costs a little
+      r.score = ok ? Math.max(10, 100 - 15 * r.hints - def.miss * extra - (def.pause ?? 0) * paused) : 0;
+      r.stars = !ok ? 0 : (r.hints === 0 && extra === 0 && paused === 0 ? 3 : r.score >= 70 ? 2 : 1);
       if (def.unl) { const u = unl(g); u.played++; u.sum += r.score; u.best = Math.max(u.best, r.score); if (r.stars === 3) u.perfect++; }
       save();
       renderHintBtn(g); renderResult(g); renderHub(); renderStreak();
     };
     const shareText = g => {
-      const r = rec(g), def = GBY[g];
-      if (def.unl) { const u = unl(g); return `${def.icon} ${def.name} · Unlimited ${LEVEL_NAMES[u.L]} #${u.pick + 1} ${r.ok ? starStr(r.stars) : '❌'}\nScore ${r.score} · ${fmtTime(r.time)} · ${plural(r.hints, 'hint')}\n${def.strip(r)}`; }
-      return `${def.icon} ${def.name} #${NUM} (${LEVEL_NAMES[LVL]}) ${r.ok ? starStr(r.stars) : '❌'}\nScore ${r.score} · ${fmtTime(r.time)} · ${plural(r.hints, 'hint')}\n${def.strip(r)}`;
+      const r = rec(g), def = GBY[g], pz = def.pause && r.pauses ? ` · ${plural(r.pauses, 'pause')}` : '';
+      if (def.unl) { const u = unl(g); return `${def.icon} ${def.name} · Unlimited ${LEVEL_NAMES[u.L]} #${u.pick + 1} ${r.ok ? starStr(r.stars) : '❌'}\nScore ${r.score} · ${fmtTime(r.time)} · ${plural(r.hints, 'hint')}${pz}\n${def.strip(r)}`; }
+      return `${def.icon} ${def.name} #${NUM} (${LEVEL_NAMES[LVL]}) ${r.ok ? starStr(r.stars) : '❌'}\nScore ${r.score} · ${fmtTime(r.time)} · ${plural(r.hints, 'hint')}${pz}\n${def.strip(r)}`;
     };
     const copy = async (text, btn, pre) => {
       const old = btn.textContent;
@@ -2795,7 +2874,7 @@
       box.hidden = false;
       box.innerHTML = `<div style="font-size:1.6rem">${r.ok ? starHTML(r.stars) : '<span class="stars s0">Out of tries</span>'}</div>
     <div class="big">${r.score}<span class="sr-only"> points</span></div>
-    <p class="note">${fmtTime(r.time)} · ${plural(r.hints, 'hint')} · ${plural(r.misses, 'mistake')}</p>
+    <p class="note">${fmtTime(r.time)} · ${plural(r.hints, 'hint')} · ${plural(r.misses, 'mistake')}${GBY[g].pause ? ` · ${plural(r.pauses ?? 0, 'pause')}` : ''}</p>
     <pre class="share"></pre>${LEGEND}
     <div class="row"><button type="button" class="btn primary small cp">Copy result</button><button type="button" class="btn small nx">${GBY[g].unl ? 'New level' : 'Next puzzle'}</button></div>`;
       $('.share', box).textContent = shareText(g);
@@ -2825,6 +2904,7 @@
       window.scrollTo(0, 0);
       const wantsInput = v === 'cr' && matchMedia('(pointer: fine)').matches && !rec('cr').done;
       if (wantsInput) handlers.cr.focus(); else $(`#v-${v} h2`)?.focus({ preventScroll: true });
+      if (GBY[v]) tutorFor(v);
     };
     $$('.tabs button').forEach(b => b.addEventListener('click', () => show(b.dataset.view)));
     const tick = () => {
@@ -2833,6 +2913,56 @@
       el.textContent = fmtTime(r.done ? r.time : Math.round((Date.now() - (r.start ?? Date.now())) / 1000));
     };
     setInterval(tick, 1000);
+    // ---- First-time tutorials: a short pop-up the first time someone opens each game, and in Baggage Maze one for each new kind of piece
+    const tut = () => (store.tut ??= { g: {}, p: {} });
+    const dlg = document.createElement('dialog');
+    dlg.className = 'tut'; dlg.setAttribute('aria-labelledby', 'tutH');
+    dlg.innerHTML = `<p class="tag" id="tutTag"></p><h2 id="tutH"></h2><div class="tutpic" id="tutPic"></div><div class="tutbody" id="tutBody"></div><div class="tutdots" id="tutDots" aria-hidden="true"></div><div class="row tutbtns"><button type="button" class="btn small" id="tutBack">Back</button><button type="button" class="btn primary small" id="tutNext">Next</button></div>`;
+    document.body.append(dlg);
+    let tutQ = [], tutI = 0, tutDone = null;
+    const tutShow = () => {
+      const s = tutQ[tutI], pic = $('#tutPic');
+      $('#tutTag').textContent = s.tag ?? ''; $('#tutH').textContent = s.title; $('#tutBody').innerHTML = s.html;
+      pic.replaceChildren(); if (s.pic) pic.append(s.pic()); pic.hidden = !s.pic;
+      $('#tutDots').innerHTML = tutQ.length > 1 ? tutQ.map((_, i) => `<i class="${i === tutI ? 'on' : ''}"></i>`).join('') : '';
+      $('#tutBack').hidden = tutI === 0; $('#tutNext').textContent = tutI === tutQ.length - 1 ? 'Let’s play' : 'Next';
+    };
+    const openTut = (steps, onDone) => { tutQ = steps; tutI = 0; tutDone = onDone; tutShow(); dlg.showModal(); $('#tutNext').focus(); };
+    $('#tutNext').addEventListener('click', () => { if (tutI < tutQ.length - 1) { tutI++; tutShow(); $('#tutNext').focus(); } else dlg.close(); });
+    $('#tutBack').addEventListener('click', () => { if (tutI > 0) { tutI--; tutShow(); $(tutI ? '#tutBack' : '#tutNext').focus(); } });
+    dlg.addEventListener('close', () => { const f = tutDone; tutDone = null; f?.(); });
+    // a cropped copy of the real board, so the tutorial shows the actual piece
+    const piecePic = (svg, [x, y, w, hh]) => {
+      const c = svg.cloneNode(true);
+      c.setAttribute('viewBox', `${x} ${y} ${w} ${hh}`); c.setAttribute('aria-hidden', 'true'); c.removeAttribute('role'); c.removeAttribute('aria-label');
+      c.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); c.querySelectorAll('[tabindex]').forEach(e => e.removeAttribute('tabindex'));
+      c.querySelectorAll('.bag').forEach(e => e.remove());
+      return c;
+    };
+    const GAME_TUT = {
+      bg: [
+        { title: 'Welcome to Baggage Maze', html: 'Suitcases ride the conveyor belts. Get every one into the <b>bin of its color</b>. A bag in the wrong bin, or one that falls off the belts, means starting over.' },
+        { title: 'Blue changes, red doesn’t', html: '<b>Blue</b> pieces are yours to change: tap them. <b>Red</b> belts and <b>gray</b> slides are fixed. Each new kind of piece gets its own quick introduction the first time you meet it.' },
+        { title: 'Starting the bags', html: 'Press <b>Play</b>, or just make your first move on the board, and the bags start rolling. Keep changing pieces while they move. You can pause, but each press of Pause costs 5 points.' },
+      ],
+    };
+    const SCORE_TUT = def => ({ title: 'Points and stars', html: `Every puzzle starts at <b>100 points</b>. Each hint costs 15 and mistakes cost a few more${def.pause ? ', and so does each press of Pause' : ''}. Finish to earn up to <b>three stars</b>, then copy your result to share with friends. The full rules are always below the game.` });
+    const tutorFor = v => {
+      const def = GBY[v]; if (!def || dlg.open) return;
+      const base = def.base ?? v, t = tut(), firstTime = !t.g[base], steps = [];
+      if (firstTime) steps.push(...(GAME_TUT[base] ?? [{ title: `How to play ${def.name}`, html: $(`#${v}Rules`)?.innerHTML ?? '' }]), SCORE_TUT(def));
+      steps.forEach(s => { s.tag = `${def.icon} ${def.name}`; });
+      const fresh = (def.tour?.items ?? []).filter(it => !t.p[it.key]);
+      fresh.forEach(it => steps.push({ tag: 'New piece', title: it.title, html: it.html, pic: () => piecePic(def.tour.svg, it.view) }));
+      if (!steps.length) return;
+      const r = rec(v), unstarted = firstTime && !r.done;
+      openTut(steps, () => {
+        t.g[base] = true; fresh.forEach(it => { t.p[it.key] = true; });
+        if (unstarted) r.start = Date.now(); // reading the tutorial doesn't count toward your time
+        save(); tick();
+        def.tour?.flash(fresh.flatMap(it => it.cells)); // point the new pieces out on the board
+      });
+    };
 
     // ================= Hub, daily card, streak, stats =================
     const CARD_COLORS = ['#ffcb2e', '#7fd4ff', '#ff9eb0', '#9be38c', '#c3a6ff', '#ffb36b', '#6fe0cf'];
@@ -3411,10 +3541,11 @@
       const sec = document.createElement('section');
       sec.className = 'view'; sec.id = `v-${id}`; sec.hidden = true; sec.setAttribute('aria-labelledby', `${id}H`);
       sec.innerHTML = `<div class="gtop" data-g="${id}"></div>
-    <div><p class="tag">${tag} · Trial</p><h2 id="${id}H" tabindex="-1">${title}</h2><p class="rules" id="${id}Rules"></p></div>
+    <div><p class="tag">${tag} · Trial</p><h2 id="${id}H" tabindex="-1">${title}</h2></div>
     <div class="board"><div id="${id}Play" class="play-area"></div><p class="status" id="${id}Status" role="status"></p>
     <div class="actions" id="${id}Btns"><button type="button" class="btn hb" data-g="${id}" data-dyn="1"></button>${extraBtns}</div>
-    <div class="result" data-g="${id}" hidden></div></div>`;
+    <div class="result" data-g="${id}" hidden></div></div>
+    <div class="howto"><h3>How to play</h3><p class="rules" id="${id}Rules"></p></div>`;
       $('main').append(sec);
       $('.hb', sec).addEventListener('click', () => { if (useHint(id)) handlers[id].hint(); });
       return sec;
@@ -4149,7 +4280,7 @@
     // ================= BAGGAGE MAZE (trial): hand-made levels; turn the belts, route every bag to its bin =================
     // <bg-compiler>
     // Hand-made Baggage Maze levels. Each level is a small ASCII map plus a bag list:
-    //   .  empty floor            ^ > v <  red belt square (3+ in a row along their arrow make one long red belt)
+    //   .  empty floor            ^ > v <  red belt square (2+ in a row along their arrow make one long red belt)
     //   o  blue rotator (4 ways)  = |      blue long belt, horizontal / vertical (tap to reverse)
     //   ─ │ ┌ ┐ └ ┘  gray slide joining the two sides drawn      ┬ ┴ ├ ┤  director at a T: the bag arrives on the stem
     //   p  manual pusher          a        automatic pusher (both push away from the belt square beside them)
@@ -4191,7 +4322,7 @@
         else if ('1234'.includes(ch)) cell.push({ t: 'tp', sym: +ch - 1 });
         else fail(`unknown piece '${ch}' at ${nm(k)}`);
       }
-      // long belts: runs of '=' / '|', and runs of 3+ red squares that point along the run
+      // long belts: runs of '=' / '|', and runs of 2+ red squares that point along the run
       let laneId = 0;
       for (let k = 0; k < N; k++) {
         const c = cell[k];
@@ -4206,7 +4337,7 @@
           if (step(k, b) >= 0 && cell[step(k, b)].kind === 'fix' && cell[step(k, b)].dir === d) continue; // not the start of the run
           const run = [k];
           while (step(run.at(-1), d) >= 0 && cell[step(run.at(-1), d)].kind === 'fix' && cell[step(run.at(-1), d)].dir === d) run.push(step(run.at(-1), d));
-          if (run.length < 3) continue;
+          if (run.length < 2) continue;
           const id = ++laneId; run.forEach(u => Object.assign(cell[u], { kind: 'lane', lane: id, blueLane: false, laneDir: d, axis: d % 2 }));
         }
       }
@@ -4356,6 +4487,8 @@
       need.forEach(a => a.sort((x, y) => x.t - y.t));
       const used = new Set(V.map(v => v.u)); routes.forEach(r => { used.add(r.goal); r.moves.forEach(([u, d]) => { const v = step(u, d); if (v >= 0 && cell[v].t === 'tp') used.add(v); }); });
       const problems = [];
+      // a bag sitting on a single square hides its arrow, so bags start on long belts (whose other arrows show the way)
+      routes.forEach(r => { if (!r.train && (cell[r.start].kind === 'fix' || cell[r.start].kind === 'tile')) problems.push(`a bag starts on the single ${cell[r.start].kind === 'tile' ? 'rotator' : 'belt square'} at ${nm(r.start)}, hiding its arrow`); });
       // start states: wrong for the first bag that needs the control, unless a bag already sits on it at the start
       const pickOf = (k, a) => a[((k + 1) * 2654435761 + lv.n.length * 40503 >>> 0) % a.length];
       for (let k = 0; k < N; k++) {
@@ -4437,12 +4570,12 @@
         },
         {
           n: 'Two Forks', g: [
-            '......',
             'R<o>>G',
             '..^...',
-            'Y<o...',
             '..^...',
-            '..^...'], b: 'g2,2 y5,2'
+            'U<<o>Y',
+            '...^..',
+            '...^..'], b: 'g2,2 y5,3'
         },
         {
           n: 'Over the Top', g: [
@@ -4459,7 +4592,7 @@
             '>>>>oY',
             '....v.',
             '....v.',
-            '....R.'], b: 'y2,0 r2,4'
+            '....R.'], b: 'y2,0 r2,3'
         },
         {
           n: 'Back Up', g: [
@@ -4472,11 +4605,11 @@
         },
         {
           n: 'Up or Down', g: [
-            '..Y....',
-            '..|....',
-            '.>|<<<<',
-            '..|....',
-            '..R....'], b: 'y2,1 r2,6'
+            '..Y.....',
+            '..|.....',
+            '>>|<<<<<',
+            '..|.....',
+            '..R.....'], b: 'y2,0 r2,7'
         },
         {
           n: 'Two Turns', g: [
@@ -4485,24 +4618,25 @@
             'o<<o>Y',
             'v..^..',
             'U..^..',
-            '...^..'], b: 'y2,3 u5,3'
+            '...^..'], b: 'y3,3 u5,3'
         },
         {
           n: 'Winding Belts', g: [
-            '>===v.',
-            '|...|.',
-            '|...|.',
-            '|...v.',
-            '^...G.'], b: 'g4,0'
+            '>===v',
+            '|...|',
+            '|...|',
+            '^...v',
+            '^...G'], b: 'g4,0'
         },
         {
           n: 'Crossroads', g: [
             '..Y...',
             '..^...',
-            '.>o>>G',
+            '>>o>>G',
             '..^...',
             '..^...',
-            '..^...'], b: 'g2,2 y5,2'
+            '..^...',
+            '..^...'], b: 'g2,0 y6,2'
         },
         {
           n: 'Side Step', g: [
@@ -4544,11 +4678,11 @@
         },
         {
           n: 'Merge', g: [
-            '>>>>┐.Y..',
-            '....│.^..',
-            '....└>o>G',
-            '.....^v..',
-            '......R..'], b: 'r3,5 g0,2 y0,0'
+            '>>>>>┐.Y..',
+            '.....│.^..',
+            '.....└>o>G',
+            '......^v..',
+            '......^R..'], b: 'r4,6 g0,2 y0,0'
         },
         {
           n: 'Pusher', g: [
@@ -4582,22 +4716,23 @@
         },
         {
           n: 'Shuttle', g: [
-            '.G...',
-            '>|...',
-            '.|...',
-            '.|<<<',
-            '.R...'], b: 'g1,0 r3,4'
+            '..G....',
+            '>>|....',
+            '..|....',
+            '..|<<<<',
+            '..R....'], b: 'g1,0 r3,6'
         },
         {
           n: 'Three Feeds', g: [
-            '.....v.',
-            '.....v.',
+            '.v.....',
+            '.v.....',
+            '.v...v.',
             '.v...v.',
             '.└─v─┘.',
             '...v...',
             'Y<<o>>G',
             '...v...',
-            '...R...'], b: 'y2,1 g0,5 r4,3'
+            '...R...'], b: 'y0,1 g2,5 r5,3'
         },
       ],
       // ---- Wednesday: directors at T-junctions, pushers, first chutes
@@ -4670,10 +4805,10 @@
         },
         {
           n: 'Slide Tee', g: [
-            '>>>>o>>Y',
-            '....│...',
-            '....│...',
-            'R───┴──G'], b: 'y0,4 r0,2 g0,0'
+            '>>>>>o>>Y',
+            '.....│...',
+            '.....│...',
+            'R────┴──G'], b: 'y0,4 r0,2 g0,0'
         },
         {
           n: 'Fork Lift', g: [
@@ -4746,7 +4881,7 @@
             '.v....v.',
             'Ro>>>>oG',
             '.v....v.',
-            '.Y....U.'], b: 'u0,1 r2,1 g0,6'
+            '.Y....U.'], b: 'u2,2 r0,1 g0,6'
         },
         {
           n: 'Two Trains', g: [
@@ -4798,11 +4933,12 @@
         },
         {
           n: 'Level 29', src: 'original level 29 screenshot', g: [
-            '.U.1.',
-            '3o>oG',
-            '.^.v.',
-            'Oo<o3',
-            '.1.R.'], b: 'o1,2 u2,3 g3,2 r2,1'
+            '.U..1.',
+            '3o>>oG',
+            '.^..v.',
+            '.^..v.',
+            'Oo<<o3',
+            '.1..R.'], b: 'o1,2 u2,4 g4,3 r3,1'
         },
         {
           n: 'Lane Change', g: [
@@ -5042,12 +5178,13 @@
         },
         {
           n: 'Roundabout', g: [
-            '...v..',
-            '..Uv1.',
-            '.3o>oG',
-            '..^.v.',
-            '.Oo<o3',
-            '..1.R.'], X: { '1,4': 'v' }, t: '0,3:oug', b: 'r3,2 g3,4 u4,3'
+            '...v...',
+            '..Uv.1.',
+            '.3o>>oG',
+            '..^..v.',
+            '..^..v.',
+            '.Oo<<o3',
+            '..1..R.'], t: '0,3:oug', b: 'r4,2 g3,5 u5,4'
         },
         {
           n: 'Three Tees', g: [
@@ -5095,7 +5232,7 @@
       ][L];
       // the level comes from the hand-made bank (cycling through the day's tier); the old generator is only a fallback
       let LV = null;
-      try { const list = BG_LEVELS[L]; LV = bgCompile(list[mod(pick, list.length)]); } catch (err) { console.error('Baggage Maze level failed to build; using a generated one', err); }
+      try { const list = BG_LEVELS[L]; const n = id === 'ubg' ? list.length : Math.min(10, list.length); LV = bgCompile(list[mod(pick, n)]); /* the daily rotation stays on each day's first 10; Unlimited uses them all */ } catch (err) { console.error('Baggage Maze level failed to build; using a generated one', err); }
       const ROWS = LV ? LV.R : CF.R, COLS = LV ? LV.C : CF.C, N = ROWS * COLS;
       const PAL = [['#e5484d', '●', 'red'], ['#8a5a2b', '■', 'brown'], ['#f5c400', '▲', 'yellow'], ['#2fa66b', '◆', 'green'], ['#8e4ec6', '★', 'purple'], ['#f2802e', '✚', 'orange']];
       const TPSYM = ['★', '●', '◆', '■']; // matching symbols link a pair of teleport pads
@@ -5108,8 +5245,6 @@
       // a turnable belt only cycles through headings that lead onto another square of the layout
       const exits = (cell, k) => [0, 1, 2, 3].filter(d => { const v = step(k, d); return v >= 0 && cell[v].t !== 'e'; });
 
-      // Rush (Unlimited only): every bag rolls in at the same moment, so only layouts where they never collide are kept
-      const RUSH = id === 'ubg' && !!unl('ubg').rush;
       // ---- puzzle generator: route every bag, then turn some belts the wrong way.
       const gen = r0 => {
         const pickOne = a => a[Math.floor(r0() * a.length)];
@@ -5313,7 +5448,7 @@
         return { cell, pair, routes, T, spawns, bins };
       };
       let PZ = LV;
-      for (let s = 0; s < 4000 && !PZ; s++) PZ = gen(rng(seedAt(pick, 13 + 1000 * s + (RUSH ? 500 : 0))));
+      for (let s = 0; s < 4000 && !PZ; s++) PZ = gen(rng(seedAt(pick, 13 + 1000 * s)));
       const { cell, pair, routes, T, spawns } = PZ;
       const NB = routes.length, NTP = pair.size / 2; // bags to deliver, chute pairs
       // everything the player can click: single tiles (4 ways), junction arms (2 ways), blue lanes (reverse), pushers (light on/off)
@@ -5333,7 +5468,7 @@
 
       GBY[id].blurb = `${LV ? `${LV.name} · ` : ''}${ROWS}×${COLS} · ${plural(NB, 'bag')}${NTP ? ` · ${plural(NTP, 'chute pair', 'chute pairs')}` : ''}`;
       makeSection(id, 'Logic · real-time', 'Baggage Maze', `<button type="button" class="btn" id="${id}Restart">↺ Restart</button><button type="button" class="btn primary" id="${id}Go">▶ Play</button>`);
-      $(`#${id}Rules`).innerHTML = `Sort every suitcase into the <b>bin of its color</b>. A bag in the wrong bin, or one that falls off the belts, means starting the level over. <b>Blue pieces change; red and gray ones don’t.</b> <b>Rotator belts</b> (small blue squares) turn to any of the four directions when tapped. <b>Blue belts</b> run the other way when tapped; <b>red belts</b> only go the way their arrows point. <b>Slides</b> carry bags at three times the speed, either way along the slide, and bags bounce back off a closed end. <b>Directors</b> (striped swing arms) open one path and close the other; tap to swing them. <b>Manual pushers</b> have a red and a green light: tap to turn one green and it punches every bag that passes in front of it until you tap it off. <b>Automatic pushers</b> have a single green light and are always on. <b>Barriers</b> are dead ends that bags bounce off.${NTP ? ' A bag that drops into a <b>chute</b> pops out of the chute with the same symbol, leaving the way its little arrow points.' : ''} Suitcases start out on the belts and all move at once; on harder days more of them drop out of an <b>entry chute</b> one after another. Set things up, press <b>Play</b>, and keep changing pieces while bags roll. Restart costs 10. 🐢 and 🐇 switch speed.`;
+      $(`#${id}Rules`).innerHTML = `Sort every suitcase into the <b>bin of its color</b>. A bag in the wrong bin, or one that falls off the belts, means starting the level over. <b>Blue pieces change; red and gray ones don’t.</b> <b>Rotator belts</b> (small blue squares) turn to any of the four directions when tapped. <b>Blue belts</b> run the other way when tapped; <b>red belts</b> only go the way their arrows point. <b>Slides</b> carry bags at three times the speed, either way along the slide, and bags bounce back off a closed end. <b>Directors</b> (striped swing arms) open one path and close the other; tap to swing them. <b>Manual pushers</b> have a red and a green light: tap to turn one green and it punches every bag that passes in front of it until you tap it off. <b>Automatic pushers</b> have a single green light and are always on. <b>Barriers</b> are dead ends that bags bounce off.${NTP ? ' A bag that drops into a <b>chute</b> pops out of the chute with the same symbol, leaving the way its little arrow points.' : ''} Suitcases start out on the belts and all move at once; on harder days more of them drop out of an <b>entry chute</b> one after another. Press <b>Play</b>, or just make your first move, and the bags start rolling; keep changing pieces while they roll. Restart costs 10, and each press of Pause costs 5. 🐢 and 🐇 switch speed.`;
 
       // ---- state
       const R = recFor(id, L, pick); R.prog ??= { delivered: 0, restarts: 0, started: false, best: 0 };
@@ -5354,7 +5489,7 @@
       const VW = COLS * U + mg[1] + mg[3], VH = ROWS * U + mg[0] + mg[2];
       const NS = 'http://www.w3.org/2000/svg', el = (t, a = {}, parent) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); parent?.append(e); return e; };
       const bar = document.createElement('div'); bar.className = 'bgbar';
-      bar.innerHTML = `<span class="bghud" aria-live="off"></span><span class="speed" role="group" aria-label="Speed"><button type="button" id="${id}Slow" aria-pressed="true">🐢 Slow</button><button type="button" id="${id}Fast" aria-pressed="false">🐇 Fast</button></span>${id === 'ubg' ? `<button type="button" class="rushbtn" id="${id}Rush" aria-pressed="false" title="Rush: levels start already running, like the original">⚡ Rush</button>` : ''}`;
+      bar.innerHTML = `<span class="bghud" aria-live="off"></span><span class="speed" role="group" aria-label="Speed"><button type="button" id="${id}Slow" aria-pressed="true">🐢 Slow</button><button type="button" id="${id}Fast" aria-pressed="false">🐇 Fast</button></span>`;
       const hud = bar.firstChild;
       const svg = el('svg', { viewBox: `0 0 ${VW} ${VH}`, class: 'bgboard', role: 'group', 'aria-label': 'Baggage belts. Tab to a blue piece (rotator, blue belt, director or manual pusher) and press Enter to change it; arrow keys move between them.' });
       $(`#${id}Play`).append(bar, svg);
@@ -5449,10 +5584,6 @@
             const tAng = e => ang((DV[A][1] + DV[(e + 2) % 4][1]) * 20 - px, (DV[A][0] + DV[(e + 2) % 4][0]) * 20 - py);
             c.armPose = c.armT ? { px, py, of: e => tAng(e) } : { px, py, of: e => (e === h ? ang(-DV[h][1], -DV[h][0]) : ang(-(DV[h][1] + DV[tn][1]), -(DV[h][0] + DV[tn][0]))) };
           }
-          if (tt) {
-            el('circle', { cx: 13, cy: -13, r: 5.5, class: 'ol rotdot' }, g);
-            el('path', { d: 'M10.6 -14.3a3 3 0 1 0 4.6 .9', fill: 'none', stroke: 'var(--outline)', 'stroke-width': 1.4, 'stroke-linecap': 'round' }, g);
-          }
           tileEls.set(k, { g, arrow, rotor, bar, ang: null, bang: null });
         }
         if (chuteSpawns.includes(k)) {
@@ -5511,7 +5642,7 @@
         const ks = [...Array(N).keys()].filter(k => cell[k].lane === id);
         el('rect', { ...laneBox(ks), rx: 7, class: `laneedge${cell[ks[0]].blueLane ? ' blue' : ''}` }, gHit);
       });
-      const turnCtl = ct => { if (phase === 'over' || R.done) return; ct.set(ct.next()); drawCtl(ct); };
+      const turnCtl = ct => { if (phase === 'over' || R.done) return; ct.set(ct.next()); drawCtl(ct); if (phase === 'plan') run(); }; // your first move starts the bags rolling
       controls.forEach(ct => {
         const t = ct.kind === 'lane' ? el('rect', { ...laneBox(ct.cells), rx: 7, class: 'lanehit' }, gHit) : tileEls.get(ct.at).g;
         ct.el = t;
@@ -5538,6 +5669,29 @@
               : `Manual pusher, ${at(ct.at)}, light ${c.on ? 'green: it punches every passing bag ' + DNAME[c.dir] : 'red: bags ride past'}`);
       };
       tileEls.forEach((_, k) => drawTile(k)); controls.forEach(drawCtl);
+      // the kinds of pieces on this board, with where to find one, for the first-time piece tutorials
+      {
+        const all = [...Array(N).keys()], firstK = pred => all.find(k => pred(cell[k]));
+        const near = k => [k, ...[0, 1, 2, 3].map(d => step(k, d)).filter(v => v >= 0 && cell[v].t !== 'e')];
+        const view = ks => { const xs = ks.map(X), ys = ks.map(Y); return [Math.min(...xs) - 8, Math.min(...ys) - 8, Math.max(...xs) - Math.min(...xs) + U + 16, Math.max(...ys) - Math.min(...ys) + U + 16]; };
+        const items = [];
+        const add = (key, k, ks, title, html) => { if (k === undefined) return; items.push({ key, title, html, view: view(ks), cells: [k] }); };
+        let k;
+        k = firstK(c => c.kind === 'tile'); add('rotator', k, k !== undefined ? [k] : [], 'Rotator belt', 'A small <b>blue</b> square. <b>Tap it</b> to turn its arrow to the next direction; it can point all four ways. Use it to send each suitcase where it needs to go.');
+        k = firstK(c => c.blueLane); add('bluebelt', k, k !== undefined ? all.filter(j => cell[j].lane === cell[k].lane) : [], 'Blue belt', 'A long <b>blue</b> belt. <b>Tap anywhere on it</b> to reverse the whole belt, so everything on it runs the other way.');
+        k = firstK(c => c.t === 'b' && (c.kind === 'fix' || (c.lane && !c.blueLane))); add('redbelt', k, k !== undefined ? (cell[k].lane ? all.filter(j => cell[j].lane === cell[k].lane) : [k]) : [], 'Red belt', 'A <b>red</b> belt only goes the way its arrows point. You can’t change it, so plan around it.');
+        k = firstK(c => c.kind === 'slide'); add('slide', k, k !== undefined ? near(k) : [], 'Slide', 'A <b>gray</b> slide carries a suitcase at <b>three times the speed</b>, either way along it. You can’t change it. If a bag reaches a closed end, it bounces back.');
+        k = firstK(c => c.kind === 'arm'); add('director', k, k !== undefined ? near(k) : [], 'Director', 'The <b>striped swing arm</b> sits where paths split in a T. <b>Tap it</b> to swing it and choose which way bags go. A bag that hits the closed side bounces back.');
+        k = firstK(c => c.t === 'push' && !c.auto); add('pusher', k, k !== undefined ? [k, cell[k].target] : [], 'Manual pusher', 'A machine with a <b>red and a green light</b>. <b>Tap it</b> to turn it green: it then punches every suitcase that passes in front of it onto whatever is ahead, until you tap it back to red.');
+        k = firstK(c => c.t === 'push' && c.auto); add('autopusher', k, k !== undefined ? [k, cell[k].target] : [], 'Automatic pusher', 'A pusher with a <b>single green light</b>. It is always on and punches every suitcase that passes in front of it, whether you want it to or not.');
+        k = firstK(c => c.t === 'tp'); add('chute', k, k !== undefined ? [k, pair.get(k)] : [], 'Chutes', 'A suitcase that drops into a <b>chute</b> pops out of the other chute with the <b>same symbol</b>, leaving the way that chute’s little arrow points.');
+        k = firstK(c => c.t === 'wall'); add('barrier', k, k !== undefined ? near(k) : [], 'Barrier', 'A <b>barrier</b> is a dead end. Suitcases that hit it bounce back the way they came, until you change something.');
+        if (chuteSpawns.length) {
+          const sp = chuteSpawns[0], [dr, dc] = DV[inward(sp)], ox = X(sp) - dc * U, oy = Y(sp) - dr * U;
+          items.push({ key: 'entry', title: 'Entry chute', html: 'Some suitcases arrive through an <b>entry chute</b> at the edge, one right after another. The chute shows the color of the next bag and how many are still to come.', view: [Math.min(ox, X(sp)) - 8, Math.min(oy, Y(sp)) - 8, Math.abs(ox - X(sp)) + U + 16, Math.abs(oy - Y(sp)) + U + 16], cells: [sp] });
+        }
+        GBY[id].tour = { svg, items, flash: cs => cs.forEach(c => { const g = tileEls.get(c)?.g; if (!g) return; g.classList.remove('intro'); void g.getBBox(); g.classList.add('intro'); }) };
+      }
       svg.addEventListener('keydown', e => {
         const d = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[e.key];
         const from = controls.find(ct => ct.el === document.activeElement);
@@ -5552,7 +5706,7 @@
         }
         best?.el.focus();
       });
-      const renderHud = () => { const h = `<span>🧳 <b>${P.delivered}/${NB}</b> bags</span>${P.restarts ? `<span>↺ ${P.restarts}</span>` : ''}`; if (hud.innerHTML !== h) hud.innerHTML = h; };
+      const renderHud = () => { const h = `<span>🧳 <b>${P.delivered}/${NB}</b> bags</span>${P.restarts ? `<span>↺ ${P.restarts}</span>` : ''}${R.pauses ? `<span>⏸ ${R.pauses}</span>` : ''}`; if (hud.innerHTML !== h) hud.innerHTML = h; };
 
       // ---- simulation: one square per tick, smooth movement between ticks
       const say = (t, cls = '') => setStatus(st, t, cls);
@@ -5675,19 +5829,17 @@
       // belts set by a paid hint stay set up for the start of every run
       const applyHinted = () => { P.hinted.forEach(i => { const ct = controls[i]; if (ct?.need.length) ct.set(ct.need[0].v); }); controls.forEach(drawCtl); };
       const goBtn = $(`#${id}Go`);
-      const isRush = () => id === 'ubg' && !!unl('ubg').rush;
       const setGo = () => {
         goBtn.textContent = phase === 'run' ? '⏸ Pause' : phase === 'paused' ? '▶ Resume' : '▶ Play'; goBtn.disabled = R.done || phase === 'over';
-        goBtn.hidden = isRush() && phase !== 'paused'; svg.classList.toggle('running', phase === 'run');
+        svg.classList.toggle('running', phase === 'run');
       };
-      // Rush (Unlimited only): no Play button; the level starts rolling as soon as it is on screen
-      const autoStart = () => {
-        if (!isRush() || R.done || phase !== 'plan') return;
-        const wait = () => { if (!svg.isConnected || phase !== 'plan' || !isRush()) return; if (current === id && !document.hidden) run(); else requestAnimationFrame(wait); };
-        requestAnimationFrame(wait);
-      };
-      const run = () => { phase = 'run'; last = 0; if (!P.started) { P.started = true; save(); } setGo(); say(isRush() ? '⚡ Rush! The bags are already rolling. Fix the route before they reach the wrong place.' : 'Bags are rolling. Flip rotators, belts, directors and pushers as they come.'); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); };
-      goBtn.addEventListener('click', e => { if (R.done || e.detail > 1) return; if (phase === 'plan' || phase === 'paused') run(); else if (phase === 'run') { phase = 'paused'; setGo(); say('Paused. You can still turn belts.'); } });
+      const run = () => { phase = 'run'; last = 0; if (!P.started) { P.started = true; save(); } setGo(); say('Bags are rolling. Flip rotators, belts, directors and pushers as they come.'); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); };
+      // every press of Pause during a run is counted (and costs a little score); automatic pauses when you leave don't count
+      goBtn.addEventListener('click', e => {
+        if (R.done || e.detail > 1) return;
+        if (phase === 'plan' || phase === 'paused') run();
+        else if (phase === 'run') { phase = 'paused'; R.pauses = (R.pauses ?? 0) + 1; save(); setGo(); renderHud(); say(`Paused (${R.pauses === 1 ? 'once' : `${R.pauses} times`} so far; each pause costs 5). You can still change pieces.`); }
+      });
       const reset = () => {
         cancelAnimationFrame(raf); bags.forEach(b => b.g.remove()); bags = []; tick = 0; stepFrac = 0; placeField();
         controls.forEach((ct, i) => ct.set(START[i])); cell.forEach(c => { if (c.g) c.g.classList.remove('bad', 'pulse'); });
@@ -5697,22 +5849,12 @@
       $(`#${id}Restart`).addEventListener('click', () => {
         if (R.done || (phase === 'plan' && !P.started)) return;
         if (P.started || phase === 'over') { R.misses += 2; P.restarts++; }
-        P.started = false; save(); reset(); say(isRush() ? 'Restarted (−10). Here they come again!' : 'Restarted (−10). The belts are back where they started; set them up and press Play.'); autoStart();
+        P.started = false; save(); reset(); say('Restarted (−10). Everything is back where it started. Press Play, or make your first move, to go again.');
       });
       const slowBtn = $(`#${id}Slow`), fastBtn = $(`#${id}Fast`);
       const setSpeed = f => { fast = f; slowBtn.setAttribute('aria-pressed', String(!f)); fastBtn.setAttribute('aria-pressed', String(f)); svg.style.setProperty('--belt', `${(TICK() / 5).toFixed(3)}s`); };
       slowBtn.addEventListener('click', () => setSpeed(false)); fastBtn.addEventListener('click', () => setSpeed(true));
       setSpeed(false);
-      const rushBtn = $(`#${id}Rush`);
-      if (rushBtn) {
-        const paint = () => rushBtn.setAttribute('aria-pressed', String(isRush()));
-        rushBtn.addEventListener('click', () => {
-          unl('ubg').rush = !isRush(); save(); paint(); setGo();
-          if (phase === 'plan' && !P.started) { $(`#v-${id}`).remove(); startUnl(id, false); return; }
-          say(isRush() ? '⚡ Rush is on from the next level.' : 'Rush is off from the next level.');
-        });
-        paint();
-      }
       const onHide = () => { if (!svg.isConnected) { document.removeEventListener('visibilitychange', onHide); return; } if (document.hidden && phase === 'run') { phase = 'paused'; setGo(); say('Paused. Press Resume to keep going.'); } };
       document.addEventListener('visibilitychange', onHide);
       handlers[id] = {
@@ -5734,10 +5876,9 @@
       if (!R.done) applyHinted();
       if (R.done) { phase = 'over'; P.delivered = NB; say(`All ${NB} bags in the right bins!`, 'win'); }
       else if (reloaded) say(`The page reloaded after a run had started, so it counted as a restart (−10). Set up the belts and press Play.`);
-      else say(P.restarts ? `Ready. Restarts so far: ${P.restarts} (−10 each). Set up the belts and press Play.` : 'Set up the blue pieces, then press Play. You can keep changing them while the bags roll.');
+      else say(P.restarts ? `Ready. Restarts so far: ${P.restarts} (−10 each). Press Play, or make your first move, to start.` : 'Press Play, or make your first move on the board, and the bags start rolling.');
       if (!R.done) placeField();
       setGo(); place(); renderHud(); renderPreview();
-      if (!R.done) autoStart();
     };
     safeMount(mountBG, 'bg', LVL, DAY);
 
