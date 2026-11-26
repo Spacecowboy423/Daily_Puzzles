@@ -2725,7 +2725,7 @@
     UNL.forEach(b => { const u = { ...GBY[b], id: `u${b}`, base: b, unl: true, trial: false }; GAMES.push(u); GBY[u.id] = u; });
     const blankRec = () => ({ hints: 0, misses: 0, done: false, prog: null, start: null });
     // Saved progress is tied to a game version and a puzzle; anything older starts that game fresh instead of crashing.
-    const GAME_VER = { ls: 1, cs: 1, rb: 2, mm: 3, oo: 2, bg: 14 };
+    const GAME_VER = { ls: 1, cs: 1, rb: 2, mm: 3, oo: 2, bg: 17 };
     const recFor = (id, L, pick) => {
       const base = GBY[id].base ?? id, sig = `${GAME_VER[base]}:${L}:${pick}`, R = rec(id);
       if (R.sig === undefined && GAME_VER[base] === 1 && !R.broken) R.sig = sig;
@@ -4146,19 +4146,957 @@
     };
     safeMount(mountCS, 'cs', LVL, DAY);
 
-    // ================= BAGGAGE MAZE (trial): turn the belts, route every bag to its bin =================
+    // ================= BAGGAGE MAZE (trial): hand-made levels; turn the belts, route every bag to its bin =================
+    // <bg-compiler>
+    // Hand-made Baggage Maze levels. Each level is a small ASCII map plus a bag list:
+    //   .  empty floor            ^ > v <  red belt square (3+ in a row along their arrow make one long red belt)
+    //   o  blue rotator (4 ways)  = |      blue long belt, horizontal / vertical (tap to reverse)
+    //   ─ │ ┌ ┐ └ ┘  gray slide joining the two sides drawn      ┬ ┴ ├ ┤  director at a T: the bag arrives on the stem
+    //   p  manual pusher          a        automatic pusher (both push away from the belt square beside them)
+    //   x  barrier                R N Y G U O  bin (red, brown, yellow, green, purple, orange)
+    //   1 2 3 4  chute pair (★ ● ◆ ■); a bag dropping into one pops out of the other, leaving toward its only neighbour
+    // b: bags already on the belts, 'r2,1' = a red bag at row 2, column 1 (+r,c adds a waypoint its route must pass)
+    // t: entry-chute trains, '0,3:ryg' = red, yellow then green drop in at the border square row 0, column 3
+    // X: per-square overrides ('r,c': '>' = pusher direction or chute exit), S: start states ('r,c': '<' or 'on'/'off')
+    // The compiler finds every bag's route, times it in steps, works out what each control must be when, and
+    // checks the level is fair: no control needed two ways at once, no bags overlapping, no clutter.
+    const BG_DIRS = '^>v<';
+    const BG_SLIDE = { '─': [1, 3], '│': [0, 2], '┌': [1, 2], '┐': [2, 3], '└': [0, 1], '┘': [0, 3] };
+    const BG_TEE = { '┬': 0, '┴': 2, '├': 3, '┤': 1 }; // heading of a bag that arrives on the stem
+    const BG_BINS = 'RNYGUO', BG_BAGS = 'rnyguo';
+    const bgCompile = (lv, strict = false) => {
+      const fail = m => { throw new Error(`${lv.n}: ${m}`); };
+      const G = lv.g.map(s => [...s]), R = G.length, C = G[0].length, N = R * C;
+      if (G.some(r => r.length !== C)) fail('ragged rows');
+      const DV = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+      const rc = k => [Math.floor(k / C), k % C];
+      const step = (k, d) => { const [r, c] = rc(k), nr = r + DV[d][0], nc = c + DV[d][1]; return nr < 0 || nc < 0 || nr >= R || nc >= C ? -1 : nr * C + nc; };
+      const pos = s => { const [r, c] = s.split(',').map(Number); if (!(r >= 0 && r < R && c >= 0 && c < C)) fail(`bad square ${s}`); return r * C + c; };
+      const nm = k => `${rc(k)[0]},${rc(k)[1]}`;
+      const X = {}, S = {};
+      Object.entries(lv.X ?? {}).forEach(([s, v]) => { X[pos(s)] = v; });
+      Object.entries(lv.S ?? {}).forEach(([s, v]) => { S[pos(s)] = v; });
+      const cell = [];
+      for (let k = 0; k < N; k++) {
+        const ch = G[Math.floor(k / C)][k % C];
+        if (ch === '.') cell.push({ t: 'e' });
+        else if (BG_DIRS.includes(ch)) cell.push({ t: 'b', kind: 'fix', dir: BG_DIRS.indexOf(ch), need: [] });
+        else if (ch === '=' || ch === '|') cell.push({ t: 'b', kind: 'lane', blueLane: true, axis: ch === '=' ? 1 : 0, dir: ch === '=' ? 1 : 0, need: [] });
+        else if (ch === 'o') cell.push({ t: 'b', kind: 'tile', dir: 0, need: [] });
+        else if (BG_SLIDE[ch]) cell.push({ t: 'b', kind: 'slide', conn: [...BG_SLIDE[ch]], dir: BG_SLIDE[ch][1], need: [] });
+        else if (ch in BG_TEE) { const h = BG_TEE[ch]; cell.push({ t: 'b', kind: 'arm', armIn: h, armT: true, sw: [(h + 3) % 4, (h + 1) % 4], dir: (h + 3) % 4, need: [] }); }
+        else if (ch === 'p' || ch === 'a') cell.push({ t: 'push', auto: ch === 'a', on: ch === 'a', need: [] });
+        else if (ch === 'x') cell.push({ t: 'wall' });
+        else if (BG_BINS.includes(ch)) cell.push({ t: 'bin', color: BG_BINS.indexOf(ch) });
+        else if ('1234'.includes(ch)) cell.push({ t: 'tp', sym: +ch - 1 });
+        else fail(`unknown piece '${ch}' at ${nm(k)}`);
+      }
+      // long belts: runs of '=' / '|', and runs of 3+ red squares that point along the run
+      let laneId = 0;
+      for (let k = 0; k < N; k++) {
+        const c = cell[k];
+        if (c.t !== 'b' || c.lane) continue;
+        if (c.kind === 'lane') {
+          const d = c.axis ? 1 : 2, run = [k];
+          while (step(run.at(-1), d) >= 0 && cell[step(run.at(-1), d)].kind === 'lane' && cell[step(run.at(-1), d)].axis === c.axis && !cell[step(run.at(-1), d)].lane) run.push(step(run.at(-1), d));
+          if (run.length < 2) fail(`blue belt at ${nm(k)} is a single square; use a rotator`);
+          const id = ++laneId; run.forEach(u => { cell[u].lane = id; });
+        } else if (c.kind === 'fix') {
+          const d = c.dir, b = (d + 2) % 4;
+          if (step(k, b) >= 0 && cell[step(k, b)].kind === 'fix' && cell[step(k, b)].dir === d) continue; // not the start of the run
+          const run = [k];
+          while (step(run.at(-1), d) >= 0 && cell[step(run.at(-1), d)].kind === 'fix' && cell[step(run.at(-1), d)].dir === d) run.push(step(run.at(-1), d));
+          if (run.length < 3) continue;
+          const id = ++laneId; run.forEach(u => Object.assign(cell[u], { kind: 'lane', lane: id, blueLane: false, laneDir: d, axis: d % 2 }));
+        }
+      }
+      // pushers punch away from the one belt square beside them
+      for (let q = 0; q < N; q++) {
+        const pc = cell[q]; if (pc.t !== 'push') continue;
+        const cand = X[q] !== undefined ? [BG_DIRS.indexOf(X[q])] : [0, 1, 2, 3].filter(d => { const v = step(q, d); return v >= 0 && (cell[v].kind === 'fix' || cell[v].kind === 'lane'); });
+        if (cand.length !== 1) fail(`pusher at ${nm(q)} needs exactly one belt beside it (or an X direction)`);
+        const p = cand[0], k = step(q, p), tc = cell[k];
+        if (!tc || !(tc.kind === 'fix' || tc.kind === 'lane')) fail(`pusher at ${nm(q)} does not face a belt`);
+        if ((tc.kind === 'fix' ? tc.dir % 2 : tc.axis) === p % 2) fail(`pusher at ${nm(q)} pushes along its belt`);
+        if (tc.pusher !== undefined) fail(`two pushers on ${nm(k)}`);
+        Object.assign(pc, { dir: p, target: k }); tc.pusher = q;
+      }
+      // chutes come in pairs and send bags out toward their only neighbour
+      const pair = new Map();
+      for (let s = 0; s < 4; s++) {
+        const ks = [...Array(N).keys()].filter(k => cell[k].t === 'tp' && cell[k].sym === s);
+        if (!ks.length) continue;
+        if (ks.length !== 2) fail(`chute ${s + 1} must come as a pair`);
+        pair.set(ks[0], ks[1]); pair.set(ks[1], ks[0]);
+        ks.forEach(k => {
+          const cand = X[k] !== undefined ? [BG_DIRS.indexOf(X[k])] : [0, 1, 2, 3].filter(d => { const v = step(k, d); return v >= 0 && !['e', 'wall', 'push'].includes(cell[v].t); });
+          if (cand.length !== 1) fail(`chute at ${nm(k)} needs one neighbour (or an X direction)`);
+          cell[k].out = cand[0];
+        });
+      }
+      // bags
+      const routes = [];
+      const goalOf = col => { const g = [...Array(N).keys()].filter(k => cell[k].t === 'bin' && cell[k].color === col); if (!g.length) fail(`no ${BG_BAGS[col]} bin`); return g; };
+      (lv.b ?? '').split(/\s+/).filter(Boolean).forEach(tok => {
+        const col = BG_BAGS.indexOf(tok[0]); if (col < 0) fail(`bad bag ${tok}`);
+        const [st, ...via] = tok.slice(1).split('+'), k = pos(st);
+        if (cell[k].t !== 'b' || cell[k].kind === 'slide' || cell[k].kind === 'arm') fail(`bag ${tok} must start on a belt`);
+        routes.push({ color: col, spawn: k, start: k, train: false, via: via.map(pos) });
+      });
+      const inward = k => { const [r, c] = rc(k); return r === 0 ? 2 : r === R - 1 ? 0 : c === 0 ? 1 : 3; };
+      [].concat(lv.t ?? []).forEach(tr => {
+        const [st, cols] = tr.split(':'), k = pos(st), [r, c] = rc(k);
+        if (!((r === 0 || r === R - 1) !== (c === 0 || c === C - 1))) fail(`train ${tr} must enter at a border square that is not a corner`);
+        if (cell[k].t !== 'b') fail(`train ${tr} enters onto nothing`);
+        [...cols].forEach((ch, j) => { const col = BG_BAGS.indexOf(ch); if (col < 0) fail(`bad train bag ${ch}`); routes.push({ color: col, spawn: k, start: k, train: true, trainIx: j, via: [] }); });
+      });
+      if (!routes.length) fail('no bags');
+      const starts = routes.filter(r => !r.train).map(r => r.start);
+      if (new Set(starts).size !== starts.length) fail('two bags start on one square');
+      // ---- every way a bag can go from a square: [{ d, ctl: [key, value] | null }]
+      const isCh = k => cell[k].kind === 'slide' || cell[k].kind === 'arm';
+      const cost = (u, v) => (isCh(u) && isCh(v) ? 1 : isCh(u) || isCh(v) ? 2 : 3);
+      const opts = (u, h, via) => {
+        const c = cell[u], inS = (h + 2) % 4;
+        if (c.t === 'tp') return via ? [{ d: c.out, ctl: null }] : [];
+        if (c.kind === 'slide') return c.conn.includes(inS) ? [{ d: c.conn.find(x => x !== inS), ctl: null }] : [];
+        if (c.kind === 'arm') { const A = (c.armIn + 2) % 4; return inS === A ? c.sw.map(d => ({ d, ctl: [u, d] })) : c.sw.includes(inS) ? [{ d: A, ctl: [u, inS] }] : []; }
+        let base;
+        if (c.kind === 'tile') base = [0, 1, 2, 3].map(d => ({ d, ctl: [u, d] }));
+        else if (c.kind === 'lane' && c.blueLane) base = [c.axis, c.axis + 2].map(d => ({ d, ctl: [`L${c.lane}`, d] }));
+        else base = [{ d: c.kind === 'lane' ? c.laneDir : c.dir, ctl: null }];
+        if (c.pusher === undefined) return base;
+        const pc = cell[c.pusher];
+        if (pc.auto) return [{ d: pc.dir, ctl: null }];
+        return [...base.map(o => ({ ...o, ctl2: [`P${c.pusher}`, false] })), { d: pc.dir, ctl: [`P${c.pusher}`, true] }];
+      };
+      const enter = (d, v) => { // can a bag heading d roll onto square v?
+        const cv = cell[v], side = (d + 2) % 4;
+        if (cv.t === 'tp' || cv.t === 'bin') return true;
+        if (cv.t !== 'b') return false;
+        if (cv.kind === 'slide') return cv.conn.includes(side);
+        if (cv.kind === 'arm') return side !== cv.armIn;
+        return true;
+      };
+      const enumerate = r => {
+        const goals = new Set(goalOf(r.color)), h0 = r.train ? inward(r.start) : -1, out = [];
+        let budget = 400000;
+        const dfs = (u, h, via, seen, moves, len, vi) => {
+          if (--budget < 0 || out.length >= (lv.maxRoutes ?? 300)) return;
+          for (const o of opts(u, h < 0 ? 0 : h, via)) {
+            const v = step(u, o.d); if (v < 0 || !enter(o.d, v)) continue;
+            const cv = cell[v], mv = [...moves, { u, d: o.d, cs: [o.ctl, o.ctl2].filter(Boolean) }];
+            let nvi = vi; while (nvi < r.via.length && r.via[nvi] === u) nvi++;
+            if (cv.t === 'bin') { if (goals.has(v) && nvi === r.via.length) out.push(mv); continue; }
+            if (cv.t === 'tp') { const w = pair.get(v); if (seen.has(w) || seen.has(v)) continue; dfs(w, o.d, true, new Set([...seen, v, w]), mv, len + 1, nvi); continue; }
+            if (seen.has(v) || len > (lv.maxLen ?? 40)) continue;
+            dfs(v, o.d, false, new Set([...seen, v]), mv, len + 1, nvi);
+          }
+        };
+        dfs(r.start, h0, false, new Set([r.start]), [], 0, 0);
+        if (!out.length) fail(`no route for the ${['red', 'brown', 'yellow', 'green', 'purple', 'orange'][r.color]} bag from ${nm(r.start)}`);
+        const time = mv => mv.reduce((s, m, i) => s + (mv[i + 1] ? cost(m.u, mv[i + 1].u) : 0), 0);
+        out.forEach(mv => { mv.time = time(mv); mv.nctl = new Set(mv.flatMap(m => m.cs.map(c => String(c[0])))).size; });
+        out.sort((a, b) => a.time - b.time || a.nctl - b.nctl);
+        const best = out[0].time;
+        return out.filter(mv => mv.time <= best + (lv.slack ?? 9)).slice(0, lv.keep ?? 40);
+      };
+      routes.forEach(r => { r.opts = enumerate(r); });
+      // ---- timing: a bag decides at each square D steps after the start; t = D - 1 is when its need is due
+      const visitsOf = (mv, T0, i) => { let D = T0 + 3; return mv.map((m, ix) => { const v = { u: m.u, d: m.d, t: D - 1, i, cs: m.cs, cost: mv[ix + 1] ? cost(m.u, mv[ix + 1].u) : 3, nx: mv[ix + 1]?.u ?? step(m.u, m.d) }; if (mv[ix + 1]) D += cost(m.u, mv[ix + 1].u); return v; }); };
+      const clash = (va, vb) => {
+        for (const a of va) for (const b of vb) {
+          const g = Math.abs(a.t - b.t);
+          if (a.u === b.u && (g < 3 || (a.d !== b.d && g < 6))) return true; // two bags on one square, or one square needed two ways at once
+          if (g < 6 && a.cs.some(x => b.cs.some(y => String(x[0]) === String(y[0]) && x[1] !== y[1]))) return true; // one control needed two ways at once
+          if (a.u === b.nx && b.u === a.nx && a.t + 1 < b.t + 1 + b.cost && b.t + 1 < a.t + 1 + a.cost) return true; // head-on: two bags swapping squares
+        }
+        return false;
+      };
+      const gap = lv.gap ?? 3;
+      const order = [...routes.keys()].sort((a, b) => (routes[a].train - routes[b].train) || routes[a].opts.length - routes[b].opts.length);
+      const pickR = new Array(routes.length);
+      let T = null, leaves = 0;
+      const T0 = () => routes.map(r => (r.train ? (lv.t0 ?? 3) + r.trainIx * gap : 0));
+      const settle = () => { // hold train bags back (in whole squares) until nothing clashes
+        const Tv = T0();
+        for (let pass = 0; pass < 60; pass++) {
+          const V = routes.map((r, i) => visitsOf(pickR[i], Tv[i], i));
+          let bad = -1;
+          outer: for (let a = 0; a < routes.length; a++) for (let b = a + 1; b < routes.length; b++) {
+            if (!clash(V[a], V[b])) continue;
+            const ra = routes[a], rb = routes[b];
+            if (!ra.train && !rb.train) return null;
+            bad = ra.train && rb.train ? (ra.spawn !== rb.spawn ? (Tv[a] >= Tv[b] ? a : b) : (ra.trainIx > rb.trainIx ? a : b)) : ra.train ? a : b; break outer;
+          }
+          if (bad < 0) return Tv;
+          const rb = routes[bad]; routes.forEach((r, j) => { if (r.train && r.spawn === rb.spawn && r.trainIx >= rb.trainIx) Tv[j] += 3; });
+        }
+        return null;
+      };
+      const bt = ix => {
+        if (T || leaves > 20000) return;
+        if (ix === order.length) { leaves++; T = settle(); return; }
+        const i = order[ix], r = routes[i];
+        for (const mv of r.opts) {
+          if (!r.train) {
+            const v = visitsOf(mv, 0, i);
+            if (order.slice(0, ix).some(j => !routes[j].train && clash(v, visitsOf(pickR[j], 0, j)))) continue;
+          }
+          pickR[i] = mv; bt(ix + 1); if (T) return;
+        }
+      };
+      bt(0);
+      if (!T) fail('bags can not all get through without clashing');
+      routes.forEach((r, i) => { r.moves = pickR[i].map(m => [m.u, m.d]); r.startDir = r.train ? inward(r.spawn) : pickR[i][0].d; r.goal = step(r.moves.at(-1)[0], r.moves.at(-1)[1]); });
+      // ---- needs: what every control has to be, and when
+      const V = routes.flatMap((r, i) => visitsOf(pickR[i], T[i], i));
+      const need = new Map();
+      V.forEach(v => v.cs.forEach(c => { const key = String(c[0]); if (!need.has(key)) need.set(key, []); need.get(key).push({ t: v.t, v: c[1], i: v.i, u: v.u }); }));
+      need.forEach(a => a.sort((x, y) => x.t - y.t));
+      const used = new Set(V.map(v => v.u)); routes.forEach(r => { used.add(r.goal); r.moves.forEach(([u, d]) => { const v = step(u, d); if (v >= 0 && cell[v].t === 'tp') used.add(v); }); });
+      const problems = [];
+      // start states: wrong for the first bag that needs the control, unless a bag already sits on it at the start
+      const pickOf = (k, a) => a[((k + 1) * 2654435761 + lv.n.length * 40503 >>> 0) % a.length];
+      for (let k = 0; k < N; k++) {
+        const c = cell[k];
+        if (c.t !== 'b') continue;
+        if (c.kind === 'tile' || c.kind === 'arm') {
+          const list = need.get(String(k));
+          if (!list) { problems.push(`${c.kind === 'tile' ? 'rotator' : 'director'} at ${nm(k)} is never used`); c.need = []; continue; }
+          c.need = list.map(x => ({ d: x.v, t: x.t, i: x.i }));
+          if (S[k] !== undefined) c.dir = BG_DIRS.indexOf(S[k]);
+          else if (c.kind === 'arm') c.dir = list[0].t < 5 ? list[0].v : c.sw.find(x => x !== list[0].v);
+          else {
+            // a rotator starts pointing somewhere believable: at another piece if it can, never back at a bag's way in
+            const v0 = list[0].v, feeds = v => cell[v].t === 'b' && (cell[v].kind === 'fix' || (cell[v].kind === 'lane' && !cell[v].blueLane)) && step(v, cell[v].dir) === k;
+            const plaus = [0, 1, 2, 3].filter(d => d !== v0 && step(k, d) >= 0 && !['e', 'push'].includes(cell[step(k, d)].t) && !feeds(step(k, d)));
+            c.dir = list[0].t < 5 ? v0 : pickOf(k, plaus.length ? plaus : [0, 1, 2, 3].filter(d => d !== v0));
+          }
+          if (list[0].t < 5 && !list.some(x => x.v !== list[0].v)) problems.push(`a bag starts on the control at ${nm(k)}, which only ever needs one setting`);
+          if (!c.need.some(n => n.d !== c.dir)) problems.push(`control at ${nm(k)} starts right for every bag`);
+        }
+      }
+      for (let id = 1; id <= laneId; id++) {
+        const ks = [...Array(N).keys()].filter(k => cell[k].lane === id), c0 = cell[ks[0]];
+        ks.forEach(k => { cell[k].need = []; });
+        if (!c0.blueLane) { ks.forEach(k => { cell[k].dir = c0.laneDir; }); continue; }
+        const list = need.get(`L${id}`);
+        if (!list) { problems.push(`blue belt at ${nm(ks[0])} is never used`); continue; }
+        list.forEach(x => cell[x.u].need.push({ d: x.v, v: x.v, t: x.t, i: x.i }));
+        const s = S[ks[0]] !== undefined ? BG_DIRS.indexOf(S[ks[0]]) : list[0].t < 5 ? list[0].v : (list[0].v + 2) % 4;
+        if (list[0].t < 5 && !list.some(x => x.v !== list[0].v)) problems.push(`a bag starts on the blue belt at ${nm(ks[0])}, which only ever runs one way`);
+        if (!list.some(x => x.v !== s)) problems.push(`blue belt at ${nm(ks[0])} starts right for every bag`);
+        ks.forEach(k => { cell[k].dir = s; cell[k].laneDir = list[0].v; });
+      }
+      for (let q = 0; q < N; q++) {
+        const pc = cell[q]; if (pc.t !== 'push') continue;
+        if (pc.auto) { if (!used.has(pc.target)) problems.push(`automatic pusher at ${nm(q)} never punches a bag`); pc.need = []; continue; }
+        const list = need.get(`P${q}`);
+        if (!list) { problems.push(`pusher at ${nm(q)} is never passed`); pc.need = []; continue; }
+        pc.need = list.map(x => ({ t: x.t, v: x.v }));
+        pc.on = S[q] !== undefined ? S[q] === 'on' : list[0].t < 5 ? list[0].v : !list[0].v;
+        if (!list.some(x => x.v !== pc.on)) problems.push(`pusher at ${nm(q)} starts right for every bag`);
+        if (!list.some(x => x.v)) problems.push(`pusher at ${nm(q)} never needs to punch`);
+      }
+      // clutter: everything should be on some bag's way; anything else is a deliberate trap next to a route
+      const spare = [...Array(N).keys()].filter(k => !['e', 'push'].includes(cell[k].t) && !used.has(k));
+      const comp = new Map(); let nc = 0;
+      spare.forEach(k => { if (comp.has(k)) return; nc++; const q = [k]; comp.set(k, nc); while (q.length) { const u = q.pop();[0, 1, 2, 3].forEach(d => { const v = step(u, d); if (v >= 0 && spare.includes(v) && !comp.has(v)) { comp.set(v, nc); q.push(v); } }); } });
+      for (let g = 1; g <= nc; g++) {
+        const ks = spare.filter(k => comp.get(k) === g);
+        // a trap must be somewhere a wrongly set control can actually send a bag
+        const sends = (u, d) => {
+          const c = cell[u]; if (!used.has(u) || c.t !== 'b') return false;
+          if (c.kind === 'tile') return true;
+          if (c.kind === 'arm') return c.sw.includes(d);
+          if (c.kind === 'lane' && c.blueLane) return d % 2 === c.axis;
+          if (c.pusher !== undefined) return cell[c.pusher].dir === d;
+          return false;
+        };
+        if (!ks.some(k => [0, 1, 2, 3].some(d => { const u = step(k, (d + 2) % 4); return u >= 0 && sends(u, d); }))) problems.push(`stray pieces (no control can send a bag there) at ${ks.map(nm).join(' ')}`);
+      }
+      if (nc > (lv.traps ?? 2)) problems.push(`${nc} unused bits (traps): ${spare.map(nm).join(' ')}`);
+      if (strict && problems.length) fail(problems.join('; '));
+      routes.forEach(r => { delete r.opts; delete r.via; });
+      cell.forEach(c => { delete c.axis; });
+      const spawns = [...new Set(routes.map(r => r.spawn))], bins = [...Array(N).keys()].filter(k => cell[k].t === 'bin');
+      return { R, C, cell, pair, routes, T, spawns, bins, problems, traps: spare, name: lv.n };
+    };
+    // </bg-compiler>
+    const BG_LEVELS = [
+      // ---- Monday: a couple of bags, one or two blue pieces
+      [
+        {
+          n: 'Sort Two', g: [
+            'R<o>Y',
+            '..^..',
+            '..^..',
+            '..^..',
+            '..^..'], b: 'r1,2 y4,2'
+        },
+        {
+          n: 'Two Forks', g: [
+            '......',
+            'R<o>>G',
+            '..^...',
+            'Y<o...',
+            '..^...',
+            '..^...'], b: 'g2,2 y5,2'
+        },
+        {
+          n: 'Over the Top', g: [
+            'R====Y',
+            '..^...',
+            '..^...',
+            '..^...',
+            '..^...'], b: 'r0,1 y4,2'
+        },
+        {
+          n: 'Three Ways', g: [
+            '....G.',
+            '....^.',
+            '>>>>oY',
+            '....v.',
+            '....v.',
+            '....R.'], b: 'y2,0 r2,4'
+        },
+        {
+          n: 'Back Up', g: [
+            '....U',
+            '....^',
+            'R===o',
+            '..^.v',
+            '..^.G',
+            '..^..'], b: 'u2,3 r5,2'
+        },
+        {
+          n: 'Up or Down', g: [
+            '..Y....',
+            '..|....',
+            '.>|<<<<',
+            '..|....',
+            '..R....'], b: 'y2,1 r2,6'
+        },
+        {
+          n: 'Two Turns', g: [
+            'G.....',
+            '^.....',
+            'o<<o>Y',
+            'v..^..',
+            'U..^..',
+            '...^..'], b: 'y2,3 u5,3'
+        },
+        {
+          n: 'Winding Belts', g: [
+            '>===v.',
+            '|...|.',
+            '|...|.',
+            '|...v.',
+            '^...G.'], b: 'g4,0'
+        },
+        {
+          n: 'Crossroads', g: [
+            '..Y...',
+            '..^...',
+            '.>o>>G',
+            '..^...',
+            '..^...',
+            '..^...'], b: 'g2,2 y5,2'
+        },
+        {
+          n: 'Side Step', g: [
+            'R====G',
+            '..^...',
+            '..^...',
+            'Y<o...',
+            '..^...',
+            '..^...',
+            '..^...'], b: 'r2,2 y4,2 g6,2'
+        },
+      ],
+      // ---- Tuesday: three bags, gray slides, a first pusher
+      [
+        {
+          n: 'Level Six', src: 'original level 6 screenshot', g: [
+            '...p....',
+            '>=====>Y',
+            '^..|....',
+            '^..|....',
+            '^..O....'], b: 'y2,0 o4,0'
+        },
+        {
+          n: 'Slide Down', g: [
+            '...Y...',
+            '>>>o──┐',
+            '...│..│',
+            '...│..│',
+            '...R..G'], b: 'g1,2 r1,0'
+        },
+        {
+          n: 'Fast Lane', g: [
+            '.┌───┐.',
+            '.│...│.',
+            '.^...│.',
+            '.^...v.',
+            '.^...v.',
+            'R=====G'], b: 'g2,1 r4,1'
+        },
+        {
+          n: 'Merge', g: [
+            '>>>>┐.Y..',
+            '....│.^..',
+            '....└>o>G',
+            '.....^v..',
+            '......R..'], b: 'r3,5 g0,2 y0,0'
+        },
+        {
+          n: 'Pusher', g: [
+            '.....p..',
+            '>>>>>>>Y',
+            '.....v..',
+            '.....G..'], b: 'g1,4 y1,2 g1,0'
+        },
+        {
+          n: 'Drop Off', g: [
+            '>>o>o>v',
+            '^.v.v.v',
+            '^.R.G.Y',
+            '^......'], b: 'r0,1 g1,0 y3,0'
+        },
+        {
+          n: 'Two Pushers', g: [
+            '...G....',
+            '...^.p..',
+            '>>>>>>>Y',
+            '...p.v..',
+            '.....R..'], b: 'r2,4 g2,2 y2,0'
+        },
+        {
+          n: 'Gray Arms', g: [
+            '.┌─o─┐.',
+            '.│.^.│.',
+            '.│.^.│.',
+            '.│.^.│.',
+            '.R.^.G.'], b: 'g2,3 r4,3'
+        },
+        {
+          n: 'Shuttle', g: [
+            '.G...',
+            '>|...',
+            '.|...',
+            '.|<<<',
+            '.R...'], b: 'g1,0 r3,4'
+        },
+        {
+          n: 'Three Feeds', g: [
+            '.....v.',
+            '.....v.',
+            '.v...v.',
+            '.└─v─┘.',
+            '...v...',
+            'Y<<o>>G',
+            '...v...',
+            '...R...'], b: 'y2,1 g0,5 r4,3'
+        },
+      ],
+      // ---- Wednesday: directors at T-junctions, pushers, first chutes
+      [
+        {
+          n: 'The Tee', g: [
+            '...v...',
+            '...v...',
+            '...v...',
+            '...v...',
+            '...v...',
+            'R<<┴>>G'], b: 'r4,3 g2,3 r0,3'
+        },
+        {
+          n: 'Push and Tee', g: [
+            '...v...',
+            '...v...',
+            '...v...',
+            '..pv>>Y',
+            '...v...',
+            '...v...',
+            'R──┴──G'], b: 'g5,3 y2,3 r0,3'
+        },
+        {
+          n: 'Double Tee', g: [
+            '...v...',
+            '...v...',
+            '...v...',
+            '...v...',
+            '...v...',
+            '.┌─┴─┐.',
+            '.│...│.',
+            'R┴G.Y┴U'], b: 'r4,3 y2,3 g0,3'
+        },
+        {
+          n: 'First Chute', g: [
+            '...Y....',
+            '...^....',
+            '>>>o>>1.',
+            '...v....',
+            '...R....',
+            '......1G'], b: 'g2,2 y2,0'
+        },
+        {
+          n: 'Chute Swap', g: [
+            '...Y...',
+            '.1<o>2.',
+            '...^...',
+            '...^...',
+            'G<2^1>R',
+            '...^...',
+            '...^...'], X: { '4,2': '<', '4,4': '>' }, b: 'g2,3 r4,3 y6,3'
+        },
+        {
+          n: 'Pusher Tee', g: [
+            '...v...',
+            '...v...',
+            '...v...',
+            'Y<<vp..',
+            '..pv>>U',
+            '...v...',
+            'R──┴──G'], X: { '3,4': '<', '4,2': '>' }, b: 'g4,3 y2,3 u0,3'
+        },
+        {
+          n: 'Detour', g: [
+            '.....p...',
+            '>>>>>>>>G',
+            '.....1...',
+            'R<<<<<<<1'], X: { '2,5': '^' }, b: 'r1,4 g1,2 r1,0'
+        },
+        {
+          n: 'Slide Tee', g: [
+            '>>>>o>>Y',
+            '....│...',
+            '....│...',
+            'R───┴──G'], b: 'y0,4 r0,2 g0,0'
+        },
+        {
+          n: 'Fork Lift', g: [
+            '..R─┬─G',
+            '>>>>|..',
+            '....|..',
+            '....|..',
+            '....Y..'], b: 'r1,4 g1,2 y1,0'
+        },
+        {
+          n: 'Sorting Train', g: [
+            '...v...',
+            '...v...',
+            'Y<<o>>G',
+            '...v...',
+            '...R...'], t: '0,3:ygr'
+        },
+      ],
+      // ---- Thursday: chutes, pushers and directors together; first entry-chute trains
+      [
+        {
+          n: 'Junction', src: 'original video: chute train into a T-junction', g: [
+            '....v....',
+            'R==GvO==U',
+            '.^..v..^.',
+            '.^..v..^.',
+            '.^..v..^.',
+            '.└<<┴>>┘.'], t: '0,4:rogu'
+        },
+        {
+          n: 'Pusher Line', g: [
+            '..G...U..',
+            '..^.p.^..',
+            '>>>>>>>>Y',
+            '..p.v.p..',
+            '....R....'], X: { '3,6': '^' }, t: '2,0:gruy'
+        },
+        {
+          n: 'Chute Relay', g: [
+            '>>>o>>1',
+            '...v...',
+            '...R...',
+            '1>>o>>2',
+            '...v...',
+            '...Y..2',
+            '......v',
+            '......G'], X: { '3,6': '<' }, b: 'g0,0 r0,2 y3,1'
+        },
+        {
+          n: 'Shunting Yard', g: [
+            '...R...',
+            '...^...',
+            '>>>o─┐.',
+            '...v.│.',
+            '...v.│.',
+            '...GU┴Y'], t: '2,0:ruyg'
+        },
+        {
+          n: 'Tee Pushers', g: [
+            '....v....',
+            '....v....',
+            'Y<<<vp...',
+            '...pv>>>U',
+            '....v....',
+            'R───┴───G'], X: { '2,5': '<', '3,3': '>' }, t: '0,4:yurg'
+        },
+        {
+          n: 'Crossover', g: [
+            '.v....v.',
+            '.v....v.',
+            'Ro>>>>oG',
+            '.v....v.',
+            '.Y....U.'], b: 'u0,1 r2,1 g0,6'
+        },
+        {
+          n: 'Two Trains', g: [
+            '...v...',
+            '...v...',
+            '>>>o>>G',
+            '...v...',
+            '...R...'], t: ['0,3:gr', '2,0:rg']
+        },
+        {
+          n: 'Chute Tee', g: [
+            '...v...',
+            '..pv>>Y',
+            '..1┴2..',
+            '.......',
+            'G<2.1>R'], X: { '2,4': '<' }, t: '0,3:ygry'
+        },
+        {
+          n: 'Long Slide', g: [
+            '...v...',
+            '...vp..',
+            '┌──┴>>G',
+            '│...v..',
+            '│...Y..',
+            '└─────R'], X: { '1,4': 'v' }, t: '0,3:gyrg'
+        },
+        {
+          n: 'Merge Point', g: [
+            '....v...',
+            '....v...',
+            '...pv>>G',
+            '>>>>v...',
+            'R<<<vp..',
+            '....v...',
+            '....Y...'], X: { '2,3': '>' }, t: ['0,4:gyr', '3,0:ry']
+        },
+      ],
+      // ---- Friday: longer trains, more bags moving at once
+      [
+        {
+          n: 'Push and Shove', src: 'original video: long blue belts and manual pushers', g: [
+            '.R....G.',
+            '.|....|.',
+            'p|>>>>|.',
+            '.|....|.',
+            '.|<<<<|p',
+            '.|....|.',
+            '.Y....U.'], b: 'g1,1 r3,6 y4,3 u2,5'
+        },
+        {
+          n: 'Level 29', src: 'original level 29 screenshot', g: [
+            '.U.1.',
+            '3o>oG',
+            '.^.v.',
+            'Oo<o3',
+            '.1.R.'], b: 'o1,2 u2,3 g3,2 r2,1'
+        },
+        {
+          n: 'Lane Change', g: [
+            '...p....',
+            'R======G',
+            '...v.^..',
+            'Y======U',
+            '.....p..'], b: 'u1,1 g1,5 y3,3 r3,6'
+        },
+        {
+          n: 'Big Tee', g: [
+            '....v....',
+            '....v....',
+            '...pv>>>N',
+            '....v....',
+            '.┌──┴──┐.',
+            '.│.....│.',
+            'R┴G...Y┴U'], t: '0,4:rgnyu'
+        },
+        {
+          n: 'Gauntlet', g: [
+            '.G...U..',
+            '.^.p.^..',
+            '>>>>>>>Y',
+            '.p.v.p..',
+            '...R....'], t: '2,0:gryuy'
+        },
+        {
+          n: 'Switchboard', g: [
+            '...R....',
+            '...^....',
+            '>>>o>>1G',
+            '...v...^',
+            '...2...^',
+            '2>o>U..1',
+            '..v.....',
+            '..Y.....'], X: { '2,6': '<', '4,3': '^' }, t: '2,0:rguyg'
+        },
+        {
+          n: 'Ring Road', g: [
+            '...v...',
+            '...v...',
+            '.Uo>oG.',
+            '..^.v..',
+            '.Oo<oR.'], t: '0,3:grou'
+        },
+        {
+          n: 'Relay Tee', g: [
+            '...v...',
+            '.G.v.N.',
+            'Uo─┴─oO',
+            '.v...v.',
+            '.R...Y.'], t: '0,3:gyuorn'
+        },
+        {
+          n: 'Twin Tees', g: [
+            '..v...v..',
+            '..v...v..',
+            '..v...v..',
+            'R─┴─G─┴─Y'], t: ['0,2:rgrg', '0,6:ygyg']
+        },
+        {
+          n: 'Rotor Lane', g: [
+            '.G....U.',
+            '.^....^.',
+            '>o====o.',
+            '.v....v.',
+            '.R....Y.'], t: '2,0:guryg'
+        },
+      ],
+      // ---- Saturday: several trains and pieces that interact
+      [
+        {
+          n: 'Parallel Lines', src: 'original video: parallel blue belts with pushers', g: [
+            '.R..Y..G.',
+            '.|<<|p.|.',
+            'p|>>|..|.',
+            '.|..|..|.',
+            '.|..|<<|p',
+            '.|.p|>>|.',
+            '.|..|..|.',
+            '.U..O..N.'], b: 'u1,1 r6,4 y3,4 g1,3 o5,5'
+        },
+        {
+          n: 'Level 94', src: 'original level 94 screenshot', g: [
+            '....v....',
+            '....v....',
+            '.┌──┴──┐.',
+            '.│Y...N│.',
+            'R┴o...o┴O',
+            '..G...U..'], t: '0,4:rygnuo'
+        },
+        {
+          n: 'Crossing Guard', g: [
+            '....v....',
+            '...pv>>G.',
+            '....v.U..',
+            '....v.^..',
+            '>>>>o>>>R',
+            '....v.p..',
+            '....v....',
+            '....Y....'], t: ['0,4:gyrug', '4,0:yru']
+        },
+        {
+          n: 'Twin Gauntlet', g: [
+            '.G...U...',
+            '.^.p.^...',
+            '>>>>>>>>┐',
+            '.p.v.p..│',
+            '...R..O.│',
+            '......├─┘',
+            '......Y..'], t: '2,0:gruoyg'
+        },
+        {
+          n: 'Teleport Hub', g: [
+            '...v....',
+            '...v....',
+            '1<<o>>2.',
+            '...v....',
+            '...R....',
+            '.Y....U.',
+            '2o>GO<o1'], t: '0,3:uyrgoy'
+        },
+        {
+          n: 'Switchyard', g: [
+            '.G..U..O.',
+            '.^..^..^.',
+            '>o>>o>>oY',
+            '.v..v....',
+            '.R..N....'], t: '2,0:rgunoy'
+        },
+        {
+          n: 'Shuttle Tee', g: [
+            '...R...',
+            '>>>|...',
+            '...|...',
+            '...|<<<',
+            '...|...',
+            'G──┴──Y'], t: ['1,0:rgy', '3,6:ygr']
+        },
+        {
+          n: 'Express', g: [
+            '...v.p..',
+            '.┌─┴>>v.',
+            '.│...Yv.',
+            '.│....v.',
+            '.└─R..oO',
+            '......G.'], t: '0,3:rgyorg'
+        },
+        {
+          n: 'Three Lanes', g: [
+            '...p....',
+            'R======G',
+            '..pv.^..',
+            'Y======U',
+            '..v..p^.',
+            'O======N',
+            '......p.'], X: { '2,2': 'v', '4,5': '^' }, b: 'o1,2 g3,4 n5,2 r5,5'
+        },
+        {
+          n: 'Ladder', g: [
+            '....v....',
+            '....v....',
+            'G<<<vp...',
+            '...pv>>>Y',
+            '....v....',
+            'R<<<vp...',
+            '...pv>>>U',
+            '....v....',
+            '....O....'], X: { '2,5': '<', '3,3': '>', '5,5': '<', '6,3': '>' }, t: '0,4:gyruoyg'
+        },
+      ],
+      // ---- Sunday: the biggest boards, long trains, everything at once
+      [
+        {
+          n: 'Bin Wall', src: 'original video: long belt, pushers and a wall of bins', g: [
+            '......┌─G',
+            '..┌───┤..',
+            '..│.p.└─R',
+            '>>>>>>>>Y',
+            '..p.│.┌─O',
+            '....└─┤..',
+            '......└─U'], t: '3,0:gyrouyg'
+        },
+        {
+          n: 'Level 99', src: 'original level 99 screenshot', g: [
+            'G<<<o>>>U',
+            '....|....',
+            '...p|Y...',
+            '....|....',
+            '>>>>|<<<<',
+            '....|....',
+            '...N|p...',
+            '....|....',
+            'O<<<o>>>R'], t: ['4,0:gyon', '4,8:uryg']
+        },
+        {
+          n: 'Grand Junction', g: [
+            '....v....',
+            'R==GvO==U',
+            '.^.pv>Y^.',
+            '.^N<vp.^.',
+            '.^..v..^.',
+            '.└<<┴>>┘.'], X: { '2,3': '>', '3,5': '<' }, t: '0,4:rygonug'
+        },
+        {
+          n: 'Switchyard XL', g: [
+            '.G..U..O.',
+            '.^..^..^.',
+            '>o>>o<<o<',
+            '.v..v..v.',
+            '.R..N..Y.'], t: ['2,0:grun', '2,8:oyun']
+        },
+        {
+          n: 'Cloverleaf', g: [
+            '....v....',
+            '....v....',
+            '....v....',
+            '.G..v..U.',
+            '.├──o──┤.',
+            '.R..v..Y.',
+            '....v....',
+            '....v....',
+            '...O┴N...'], t: '0,4:gruyonr'
+        },
+        {
+          n: 'Rush Hour', g: [
+            '....v....',
+            '...pv>>G.',
+            '....v.U..',
+            '.N..v.^..',
+            '>>>>o>>>R',
+            '.p..v.p..',
+            '....v....',
+            '...pv>>O.',
+            '....Y....'], t: ['0,4:gyouy', '4,0:nrun']
+        },
+        {
+          n: 'Roundabout', g: [
+            '...v..',
+            '..Uv1.',
+            '.3o>oG',
+            '..^.v.',
+            '.Oo<o3',
+            '..1.R.'], X: { '1,4': 'v' }, t: '0,3:oug', b: 'r3,2 g3,4 u4,3'
+        },
+        {
+          n: 'Three Tees', g: [
+            '.v..v..v.',
+            '.v..v..v.',
+            '.v..v..v.',
+            'R┴─G┴Y─┴U'], t: ['0,1:rgrg', '0,4:gyyg', '0,7:yuyu']
+        },
+        {
+          n: 'Parallel Lines II', g: [
+            '.R..Y..G.',
+            '.|<<|p.|.',
+            'p|>>|..|.',
+            '.|..|..|.',
+            '>|..|<<|p',
+            '.|.p|>>|.',
+            '.|..|..|.',
+            '.|..|..|.',
+            '.U..O..N.'], t: '4,0:ryg', b: 'o5,5 n1,3 u3,4'
+        },
+        {
+          n: 'Teleport Maze', g: [
+            '....v....',
+            '.1<<o>>2.',
+            '....v....',
+            '..U.v.R..',
+            '2>o.3.o<1',
+            '..v...v..',
+            '..Y.3.G..',
+            '....v....',
+            '....O....'], t: '0,4:uygroyr'
+        },
+      ],
+    ];
     const mountBG = (id, L, pick) => {
       // which pieces each day uses: single tiles, long lanes, gray slides with junction arms, pushers, teleports
       const CF = [
-        { R: 6, C: 6, bags: 3, colors: 2, tp: 0, conflicts: 0, gap: 7, decoys: 2, lanes: 1, blueLane: 0.5, arm: 0, push: 0, gray: 0 },
-        { R: 6, C: 7, bags: 4, colors: 3, tp: 0, conflicts: 1, gap: 6, decoys: 3, lanes: 1, blueLane: 0.6, arm: 0.5, push: 0, gray: 0.35 },
-        { R: 7, C: 7, bags: 4, colors: 3, tp: 1, conflicts: 1, gap: 5, decoys: 3, lanes: 2, blueLane: 0.6, arm: 0.4, push: 1, gray: 0.35 },
-        { R: 7, C: 8, bags: 5, colors: 4, tp: 1, conflicts: 2, gap: 4, decoys: 4, lanes: 2, blueLane: 0.6, arm: 0.4, push: 1, gray: 0.4 },
-        { R: 8, C: 8, bags: 6, colors: 4, tp: 2, conflicts: 2, gap: 3, decoys: 4, lanes: 2, blueLane: 0.6, arm: 0.4, push: 2, gray: 0.4 },
-        { R: 8, C: 9, bags: 7, colors: 5, tp: 2, conflicts: 3, gap: 2, decoys: 5, lanes: 3, blueLane: 0.6, arm: 0.4, push: 2, gray: 0.45 },
-        { R: 9, C: 9, bags: 8, colors: 5, tp: 3, conflicts: 4, gap: 2, decoys: 5, lanes: 3, blueLane: 0.6, arm: 0.4, push: 3, gray: 0.45 },
+        { R: 6, C: 6, bags: 3, colors: 2, tp: 0, conflicts: 0, train: 0, decoys: 2, lanes: 2, blueLane: 0.6, arm: 0, push: 0, gray: 0 },
+        { R: 6, C: 7, bags: 4, colors: 3, tp: 0, conflicts: 1, train: 0, decoys: 3, lanes: 2, blueLane: 0.65, arm: 0.5, push: 0, gray: 0.35 },
+        { R: 7, C: 7, bags: 4, colors: 3, tp: 1, conflicts: 2, train: 3, decoys: 3, lanes: 3, blueLane: 0.65, arm: 0.5, push: 1, gray: 0.35 },
+        { R: 7, C: 8, bags: 5, colors: 4, tp: 1, conflicts: 3, train: 3, decoys: 4, lanes: 3, blueLane: 0.65, arm: 0.45, push: 1, gray: 0.4 },
+        { R: 8, C: 8, bags: 6, colors: 4, tp: 2, conflicts: 3, train: 3, decoys: 4, lanes: 3, blueLane: 0.65, arm: 0.45, push: 2, gray: 0.4 },
+        { R: 8, C: 9, bags: 7, colors: 5, tp: 2, conflicts: 4, train: 4, decoys: 5, lanes: 4, blueLane: 0.65, arm: 0.45, push: 2, gray: 0.45 },
+        { R: 9, C: 9, bags: 8, colors: 5, tp: 3, conflicts: 5, train: 4, decoys: 5, lanes: 4, blueLane: 0.65, arm: 0.45, push: 3, gray: 0.45 },
       ][L];
-      const { R: ROWS, C: COLS } = CF, N = ROWS * COLS;
+      // the level comes from the hand-made bank (cycling through the day's tier); the old generator is only a fallback
+      let LV = null;
+      try { const list = BG_LEVELS[L]; LV = bgCompile(list[mod(pick, list.length)]); } catch (err) { console.error('Baggage Maze level failed to build; using a generated one', err); }
+      const ROWS = LV ? LV.R : CF.R, COLS = LV ? LV.C : CF.C, N = ROWS * COLS;
       const PAL = [['#e5484d', '●', 'red'], ['#8a5a2b', '■', 'brown'], ['#f5c400', '▲', 'yellow'], ['#2fa66b', '◆', 'green'], ['#8e4ec6', '★', 'purple'], ['#f2802e', '✚', 'orange']];
       const TPSYM = ['★', '●', '◆', '■']; // matching symbols link a pair of teleport pads
       const DV = [[-1, 0], [0, 1], [1, 0], [0, -1]], DNAME = ['up', 'right', 'down', 'left'];
@@ -4179,10 +5117,11 @@
         const edge = shuffle([...Array(N).keys()].filter(k => border(k) && !corner(k)), r0);
         const far = (k, list, dmin) => list.every(x => { const [a, b] = rc(k), [c, d] = rc(x); return Math.abs(a - c) + Math.abs(b - d) >= dmin; });
         const spawns = [], bins = [];
-        for (const k of edge) { if (spawns.length < CF.bags && far(k, spawns, 2)) { spawns.push(k); cell[k] = { t: 'b', dir: inward(k), rot: false, spawn: true, need: [] }; } }
+        const nSpawn = CF.bags - (CF.train ? CF.train - 1 : 0);
+        for (const k of edge) { if (spawns.length < nSpawn && far(k, spawns, 2)) { spawns.push(k); cell[k] = { t: 'b', dir: inward(k), rot: false, spawn: true, need: [] }; } }
         const colors = shuffle([...PAL.keys()], r0).slice(0, CF.colors);
         for (const k of edge) { if (bins.length < CF.colors && cell[k].t === 'e' && far(k, [...spawns, ...bins], 2)) { cell[k] = { t: 'bin', color: colors[bins.length] }; bins.push(k); } }
-        if (spawns.length < CF.bags || bins.length < CF.colors) return null;
+        if (spawns.length < nSpawn || bins.length < CF.colors) return null;
         const pair = new Map();
         const inner = shuffle([...Array(N).keys()].filter(k => !border(k)), r0);
         for (let t = 0; t < CF.tp; t++) {
@@ -4192,15 +5131,17 @@
           const outOf = k => pickOne([0, 1, 2, 3].filter(d => step(k, d) >= 0 && !border(step(k, d)) || (step(k, d) >= 0 && r0() < 0.2)));
           cell[a] = { t: 'tp', sym: t, out: outOf(a) }; cell[b] = { t: 'tp', sym: t, out: outOf(b) }; pair.set(a, b); pair.set(b, a);
         }
-        // one bag per entrance, every color used at least once
-        const bags = shuffle(spawns.map((k, i) => ({ color: colors[i % CF.colors], spawn: k })), r0);
+        // the train's bags all come out of the first entrance's chute; every other bag gets its own start; every color is used
+        const list = [...Array(CF.train).keys()].map(j => ({ spawn: spawns[0], train: true, trainIx: j }));
+        spawns.slice(CF.train ? 1 : 0).forEach(k => list.push({ spawn: k, train: false }));
+        const bags = shuffle(list.map((b, i) => ({ ...b, color: colors[i % CF.colors] })), r0);
         const routes = [];
         let conflictsUsed = 0;
         for (const bag of bags) {
           const goal = bins[colors.indexOf(bag.color)];
           // Dijkstra over (cell, forced direction after a teleport)
-          const key = (k, f) => k * 5 + f + 1, dist = new Map(), prev = new Map(), pq = [[0, bag.spawn, -1]];
-          dist.set(key(bag.spawn, -1), 0);
+          const f0 = inward(bag.spawn), key = (k, f) => k * 5 + f + 1, dist = new Map(), prev = new Map(), pq = [[0, bag.spawn, f0]];
+          dist.set(key(bag.spawn, f0), 0);
           let found = null;
           while (pq.length) {
             pq.sort((a, b) => a[0] - b[0]);
@@ -4219,7 +5160,8 @@
               else if (cv.t === 'tp') { nv = pair.get(v); nf = cell[nv].out; w = 1.2; }
               else if (cv.t === 'b') w = 0.7 + r0() * 0.4;
               else w = 1 + r0() * 1.2;
-              const nk = key(nv, nf), nc = cost + w + (clash ? 6 : 0);
+              const pd = prev.get(key(u, f))?.[2], bend = pd !== undefined && pd !== d ? 0.6 : 0; // long straight belts read better
+              const nk = key(nv, nf), nc = cost + w + bend + (clash ? 6 : 0);
               if (nc < (dist.get(nk) ?? Infinity)) { dist.set(nk, nc); prev.set(nk, [u, f, d]); pq.push([nc, nv, nf]); }
             }
           }
@@ -4238,13 +5180,22 @@
           }
           routes.push({ ...bag, moves, goal });
         }
+        // most bags start on the belts inside the field, a few squares along their route; train bags drop out of the chute
+        for (const r of routes) {
+          r.startDir = inward(r.spawn);
+          if (r.train) continue;
+          const s = Math.floor(r0() * Math.max(1, Math.min(4, r.moves.length - 3)));
+          if (s && cell[r.moves[s][0]].t === 'b') { r.startDir = r.moves[s - 1][1]; r.moves = r.moves.slice(s); }
+          r.start = r.moves[0][0];
+        }
+        if (new Set(routes.filter(r => !r.train).map(r => r.start)).size !== routes.filter(r => !r.train).length) return null;
         const conflictCells = [...Array(N).keys()].filter(k => cell[k].t === 'b' && new Set(routes.flatMap(r => r.moves.filter(m => m[0] === k).map(m => m[1]))).size > 1);
         if (conflictCells.length > CF.conflicts) return null;
         if (CF.conflicts && conflictCells.length < 1) return null;
-        if (conflictCells.some(k => routes.some(r => { const ix = r.moves.findIndex(m => m[0] === k); return ix >= 0 && ix < 2; }))) return null;
+        if (conflictCells.some(k => routes.some(r => { const ix = r.moves.findIndex(m => m[0] === k); return ix === 0; }))) return null; // never a flip under a bag's very first move
         if (CF.tp && !routes.some(r => r.moves.some(([u]) => cell[u].t === 'tp'))) return null;
         // what each square sees, from the routes alone: which ways bags leave it and which way they arrive
-        const seen = k => routes.flatMap(r => r.moves.map((m, ix) => (m[0] === k ? { d: m[1], from: ix ? r.moves[ix - 1][1] : -1 } : null)).filter(Boolean));
+        const seen = k => routes.flatMap(r => r.moves.map((m, ix) => (m[0] === k ? { d: m[1], from: ix ? r.moves[ix - 1][1] : (r.train ? -1 : r.startDir) } : null)).filter(Boolean));
         // rotator belts: every conflict belt, most turns, some straights
         [...Array(N).keys()].forEach(k => {
           const c = cell[k]; if (c.t !== 'b' || !c.dirs?.size) return;
@@ -4258,34 +5209,37 @@
           if (ds.length > 2 || ins.length !== 1 || ins[0] < 0) return;
           const h = ins[0], perp = d => d % 2 !== h % 2;
           if (ds.some(d => d !== h && !perp(d))) return;
-          let pair;
-          if (ds.length === 2) { if (!ds.includes(h)) return; pair = ds; }
+          let pair, T2 = false;
+          if (ds.length === 2) { pair = ds; T2 = !ds.includes(h); } // both exits sideways: a T-junction director
           else if (ds[0] === h) { const t = pickOne([0, 1, 2, 3].filter(x => perp(x) && step(k, x) >= 0)); if (t === undefined) return; pair = [h, t]; }
-          else pair = [ds[0], h];
-          c.kind = 'arm'; c.sw = pair; c.armIn = h;
+          else { const o = (ds[0] + 2) % 4; if (step(k, o) >= 0 && r0() < 0.5) { pair = [ds[0], o]; T2 = true; } else pair = [ds[0], h]; }
+          c.kind = 'arm'; c.sw = pair; c.armIn = h; c.armT = T2;
         });
         // slides: fixed squares every bag crosses the same way; they join two sides and carry bags at 3× speed
         [...Array(N).keys()].forEach(k => {
           const c = cell[k]; if (c.t !== 'b' || c.rot || c.spawn || c.kind || conflictCells.includes(k)) return;
           const sv = seen(k), ins = [...new Set(sv.map(x => x.from))];
           if (!sv.length || ins.length !== 1 || ins[0] < 0 || sv.some(x => x.d === (ins[0] + 2) % 4)) return; // no U-turns on a slide
-          if (r0() < CF.gray || [0, 1, 2, 3].some(d => cell[step(k, d)]?.kind === 'arm')) { c.kind = 'slide'; c.conn = [(ins[0] + 2) % 4, sv[0].d]; }
+          const bendHere = sv[0].d !== ins[0];
+          if (r0() < (bendHere && CF.gray ? 0.7 : CF.gray) || [0, 1, 2, 3].some(d => cell[step(k, d)]?.kind === 'arm')) { c.kind = 'slide'; c.conn = [(ins[0] + 2) % 4, sv[0].d]; }
         });
         // timing in steps (a third of a tick): a belt square takes 3 steps to cross, a slide square 1
-        const cost = k => (cell[k].kind === 'slide' ? 1 : 3);
-        const T = routes.map((_, i) => (RUSH ? 6 : 6 + i * CF.gap * 3));
+        // time to roll from square u to square v: 3 steps on belts, 1 the whole way along a slide (directors are part of the slide), 2 getting on or off
+        const isCh = k => cell[k].kind === 'slide' || cell[k].kind === 'arm';
+        const cost = (u, v) => (isCh(u) && isCh(v) ? 1 : isCh(u) || isCh(v) ? 2 : 3);
+        const T = routes.map(r => (r.train ? 3 + r.trainIx * 3 : 0));
         // a bag appears at T_i, decides at each square once it has crossed it; t = decision step - 1
-        const visits = () => routes.flatMap((r, i) => { let D = T[i] + 3; return r.moves.map(([u, d], k) => { const v = { u, d, t: D - 1, i, from: k ? r.moves[k - 1][1] : -1 }; const nx = r.moves[k + 1]; if (nx) D += cost(nx[0]); return v; }); });
+        const visits = () => routes.flatMap((r, i) => { let D = T[i] + 3; return r.moves.map(([u, d], k) => { const v = { u, d, t: D - 1, i, from: k ? r.moves[k - 1][1] : (r.train ? -1 : r.startDir) }; const nx = r.moves[k + 1]; if (nx) D += cost(u, nx[0]); return v; }); });
         for (let pass = 0; pass < 200; pass++) {
           const v = visits(); let bad = -1;
-          for (const a of v) for (const b of v) {
+          clash: for (const a of v) for (const b of v) {
             if (a.i >= b.i || a.u !== b.u) continue;
             const gapT = Math.abs(a.t - b.t);
-            if (RUSH ? gapT < 3 || (a.d !== b.d && gapT < 6) : gapT < 6 || (a.d !== b.d && gapT < 9)) { bad = b.i; break; }
+            if (gapT < 3 || (a.d !== b.d && gapT < 6)) { const ra = routes[a.i], rb = routes[b.i]; bad = ra.train && rb.train ? (ra.trainIx > rb.trainIx ? a.i : b.i) : rb.train ? b.i : ra.train ? a.i : -2; break clash; }
           }
-          if (bad < 0) break;
-          if (RUSH) return null;
-          for (let j = bad; j < T.length; j++) T[j] += 3;
+          if (bad === -1) break;
+          if (bad === -2) return null; // two field bags collide: no way to hold one back
+          const bt = routes[bad].trainIx; routes.forEach((r, j) => { if (r.train && r.trainIx >= bt) T[j] += 3; });
           if (pass === 199) return null;
         }
         // record each belt's needed headings in time order
@@ -4358,9 +5312,10 @@
         if (!controllable) return null;
         return { cell, pair, routes, T, spawns, bins };
       };
-      let PZ = null;
-      for (let s = 0; s < (RUSH ? 4000 : 1500) && !PZ; s++) PZ = gen(rng(seedAt(pick, 13 + 1000 * s + (RUSH ? 500 : 0))));
+      let PZ = LV;
+      for (let s = 0; s < 4000 && !PZ; s++) PZ = gen(rng(seedAt(pick, 13 + 1000 * s + (RUSH ? 500 : 0))));
       const { cell, pair, routes, T, spawns } = PZ;
+      const NB = routes.length, NTP = pair.size / 2; // bags to deliver, chute pairs
       // everything the player can click: single tiles (4 ways), junction arms (2 ways), blue lanes (reverse), pushers (light on/off)
       const controls = [];
       [...Array(N).keys()].forEach(k => {
@@ -4371,14 +5326,14 @@
       [...new Set(cell.filter(c => c.blueLane).map(c => c.lane))].forEach(id => {
         const ks = [...Array(N).keys()].filter(k => cell[k].lane === id), c0 = cell[ks[0]];
         // a lane only ever needs its own running direction (a pusher beside it does the sideways knocks)
-        const need = ks.flatMap(k => cell[k].need.map(n => ({ t: n.t, v: c0.laneDir }))).sort((a, b) => a.t - b.t);
+        const need = ks.flatMap(k => cell[k].need.map(n => ({ t: n.t, v: n.v ?? c0.laneDir }))).sort((a, b) => a.t - b.t);
         controls.push({ kind: 'lane', at: ks[0], cells: ks, need, get: () => c0.dir, set: v => ks.forEach(k => { cell[k].dir = v; }), next: () => (c0.dir + 2) % 4 });
       });
       const START = controls.map(ct => ct.get());
 
-      GBY[id].blurb = `${ROWS}×${COLS} · ${plural(CF.bags, 'bag')}${CF.tp ? ` · ${plural(CF.tp, 'teleport')}` : ''}`;
+      GBY[id].blurb = `${LV ? `${LV.name} · ` : ''}${ROWS}×${COLS} · ${plural(NB, 'bag')}${NTP ? ` · ${plural(NTP, 'chute pair', 'chute pairs')}` : ''}`;
       makeSection(id, 'Logic · real-time', 'Baggage Maze', `<button type="button" class="btn" id="${id}Restart">↺ Restart</button><button type="button" class="btn primary" id="${id}Go">▶ Play</button>`);
-      $(`#${id}Rules`).innerHTML = `Sort every suitcase into the <b>bin of its color</b>. A bag in the wrong bin, or one that falls off the belts, means starting the level over. <b>Blue pieces change; red and gray ones don’t.</b> <b>Rotator belts</b> (small blue squares) turn to any of the four directions when tapped. <b>Blue belts</b> run the other way when tapped; <b>red belts</b> only go the way their arrows point. <b>Slides</b> carry bags at three times the speed, either way along the slide, and bags bounce back off a closed end. <b>Directors</b> (striped swing arms) open one path and close the other; tap to swing them. <b>Manual pushers</b> have a red and a green light: tap to turn one green and it punches every bag that passes in front of it until you tap it off. <b>Automatic pushers</b> have a single green light and are always on. <b>Barriers</b> are dead ends that bags bounce off.${CF.tp ? ' A bag that drops into a <b>chute</b> pops out of the chute with the same symbol, leaving the way its little arrow points.' : ''} Bags wait outside the grid and roll in by number; on harder days several move at once. Set things up, press <b>Play</b>, and keep changing pieces while bags roll. Restart costs 10. 🐢 and 🐇 switch speed.`;
+      $(`#${id}Rules`).innerHTML = `Sort every suitcase into the <b>bin of its color</b>. A bag in the wrong bin, or one that falls off the belts, means starting the level over. <b>Blue pieces change; red and gray ones don’t.</b> <b>Rotator belts</b> (small blue squares) turn to any of the four directions when tapped. <b>Blue belts</b> run the other way when tapped; <b>red belts</b> only go the way their arrows point. <b>Slides</b> carry bags at three times the speed, either way along the slide, and bags bounce back off a closed end. <b>Directors</b> (striped swing arms) open one path and close the other; tap to swing them. <b>Manual pushers</b> have a red and a green light: tap to turn one green and it punches every bag that passes in front of it until you tap it off. <b>Automatic pushers</b> have a single green light and are always on. <b>Barriers</b> are dead ends that bags bounce off.${NTP ? ' A bag that drops into a <b>chute</b> pops out of the chute with the same symbol, leaving the way its little arrow points.' : ''} Suitcases start out on the belts and all move at once; on harder days more of them drop out of an <b>entry chute</b> one after another. Set things up, press <b>Play</b>, and keep changing pieces while bags roll. Restart costs 10. 🐢 and 🐇 switch speed.`;
 
       // ---- state
       const R = recFor(id, L, pick); R.prog ??= { delivered: 0, restarts: 0, started: false, best: 0 };
@@ -4389,11 +5344,13 @@
       let phase = 'plan', tick = 0, stepFrac = 0, bags = [], raf = 0, last = 0, fast = false, used = cell.map(() => 0);
       const TICK = () => (fast ? 0.55 : 1.1); // seconds to cross one belt square; a step is a third of that
       const STEP = () => TICK() / 3;
-      const COST = k => (cell[k]?.kind === 'slide' ? 1 : 3);
+      const isCh = k => cell[k]?.kind === 'slide' || cell[k]?.kind === 'arm';
+      const SEG = (u, v) => (isCh(u) && isCh(v) ? 1 : isCh(u) || isCh(v) ? 2 : 3); // same timing the puzzle was built with
       const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       // ---- drawing (SVG, 40 units per square with a margin for spawn chutes)
-      const U = 40, mg = [44, 44, 44, 44]; // a ring outside the grid where bags wait
+      const chuteSpawns = [...new Set(routes.filter(r => r.train).map(r => r.spawn))];
+      const U = 40, M0 = chuteSpawns.length ? 44 : 14, mg = [M0, M0, M0, M0]; // room outside the grid for an entry chute
       const VW = COLS * U + mg[1] + mg[3], VH = ROWS * U + mg[0] + mg[2];
       const NS = 'http://www.w3.org/2000/svg', el = (t, a = {}, parent) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); parent?.append(e); return e; };
       const bar = document.createElement('div'); bar.className = 'bgbar';
@@ -4415,7 +5372,6 @@
       // chunky cartoon arrow: dark outline under a white arrow
       // big solid belt arrow, tinted to match its belt (light cyan on blue, light pink on pink)
       const ARROW = '<rect x="-18" y="-18" width="36" height="36" fill="none"/><path d="M-11-4.5h8v-7.5l14 12-14 12v-7.5h-8z" class="af" stroke="var(--outline)" stroke-width="2.2" stroke-linejoin="round"/>';
-      const order = routes.map((_, i) => i).sort((a, b) => T[a] - T[b]), rank = i => order.indexOf(i) + 1;
       const tileEls = new Map(), previews = new Map(), ROT = [270, 0, 90, 180], at = k => `row ${rc(k)[0] + 1}, column ${rc(k)[1] + 1}`;
       const CHEV = '<path d="M-9-7l6 7-6 7M1-7l6 7-6 7" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>';
       const ctrlOf = new Map(); controls.forEach(ct => ct.cells.forEach(k => ctrlOf.set(k, ct)));
@@ -4480,15 +5436,18 @@
             // yellow-and-black barrier pole that swings across the closed exit
             // pivots on the corner between the straight-on exit and the turn exit, and swings 45° between
             // lying diagonally across the square (deflects bags into the turn) and lying along the side (bags go straight)
-            const h = c.armIn, tn = c.sw.find(d => d !== h);
-            const px = (DV[h][1] + DV[tn][1]) * 17, py = (DV[h][0] + DV[tn][0]) * 17;
+            const h = c.armIn, tn = c.sw.find(d => d !== h), A = (h + 2) % 4;
+            // straight-or-turn arms pivot on the corner between the two exits; T-junction arms pivot mid-way along the far wall
+            const px = c.armT ? DV[h][1] * 17 : (DV[h][1] + DV[tn][1]) * 17, py = c.armT ? DV[h][0] * 17 : (DV[h][0] + DV[tn][0]) * 17;
             bar = el('g', { class: 'armbar' }, g);
             bar.innerHTML = '<rect x="-3" y="-4.5" width="36" height="9" rx="4.5" fill="#ffd23f" stroke="var(--outline)" stroke-width="2.4"/><path d="M4-4.5l-3 9M10-4.5l-3 9M16-4.5l-3 9M22-4.5l-3 9M28-4.5l-3 9" stroke="#22212b" stroke-width="2.8"/>';
             const post = el('g', { transform: `translate(${px} ${py})` }, g);
             el('rect', { x: -5.5, y: -5.5, width: 11, height: 11, rx: 3, fill: '#2b2d38', stroke: 'var(--outline)', 'stroke-width': 2 }, post);
             el('circle', { r: 2.6, fill: '#ffd23f' }, post);
             const ang = (dx, dy) => Math.atan2(dy, dx) * 180 / Math.PI;
-            c.armPose = { px, py, turn: ang(-(DV[h][1] + DV[tn][1]), -(DV[h][0] + DV[tn][0])), straight: ang(-DV[h][1], -DV[h][0]) };
+            // for a T: to open exit e, the bar reaches toward the corner between the entry side and the side opposite e
+            const tAng = e => ang((DV[A][1] + DV[(e + 2) % 4][1]) * 20 - px, (DV[A][0] + DV[(e + 2) % 4][0]) * 20 - py);
+            c.armPose = c.armT ? { px, py, of: e => tAng(e) } : { px, py, of: e => (e === h ? ang(-DV[h][1], -DV[h][0]) : ang(-(DV[h][1] + DV[tn][1]), -(DV[h][0] + DV[tn][0]))) };
           }
           if (tt) {
             el('circle', { cx: 13, cy: -13, r: 5.5, class: 'ol rotdot' }, g);
@@ -4496,10 +5455,13 @@
           }
           tileEls.set(k, { g, arrow, rotor, bar, ang: null, bang: null });
         }
-        if (c.spawn) {
-          const [dr, dc] = DV[inward(k)], cx = x + U / 2, cy = y + U / 2;
-          el('rect', { x: cx - dc * U - 17, y: cy - dr * U - 17, width: 34, height: 34, rx: 8, class: 'dock' }, gFloor);
-          previews.set(k, el('g', { transform: `translate(${cx - dc * U} ${cy - dr * U})`, class: 'nextbag', role: 'img' }, gWait));
+        if (chuteSpawns.includes(k)) {
+          // entry chute just outside the grid: the train of bags drops out of it one after another
+          const [dr, dc] = DV[inward(k)], cx = x + U / 2 - dc * U, cy = y + U / 2 - dr * U;
+          el('rect', { x: cx - 19, y: cy - 19, width: 38, height: 38, rx: 4, fill: '#6f7383', class: 'ol' }, gFloor);
+          el('rect', { x: cx - 14, y: cy - 14, width: 28, height: 28, rx: 3, class: 'tpbase' }, gFloor);
+          el('path', { d: `M${cx + dc * 14 - dr * 6} ${cy + dr * 14 - dc * 6}L${cx + dc * 20} ${cy + dr * 20}L${cx + dc * 14 + dr * 6} ${cy + dr * 14 + dc * 6}Z`, class: 'ol tpout' }, gFloor);
+          previews.set(k, el('g', { transform: `translate(${cx} ${cy}) scale(.8)`, class: 'nextbag', role: 'img' }, gWait));
         }
       });
       // gray chutes: one continuous trough through slide and arm squares
@@ -4565,7 +5527,7 @@
         t.arrow.style.transform = `rotate(${spin(t, 'ang', ROT[c.dir])}deg)`;
         t.rotor?.setAttribute('transform', `rotate(${ROT[c.dir]})`);
         if (c.lane) laneRot.get(c.lane)?.setAttribute('transform', `rotate(${ROT[c.dir]})`);
-        if (t.bar) { const a = c.armPose, deg = c.dir === c.armIn ? a.straight : a.turn; t.bar.style.transform = `translate(${a.px}px, ${a.py}px) rotate(${spin(t, 'bang', deg)}deg)`; }
+        if (t.bar) { const a = c.armPose, deg = a.of(c.dir); t.bar.style.transform = `translate(${a.px}px, ${a.py}px) rotate(${spin(t, 'bang', deg)}deg)`; }
       };
       const drawCtl = ct => {
         ct.cells.forEach(drawTile);
@@ -4590,7 +5552,7 @@
         }
         best?.el.focus();
       });
-      const renderHud = () => { const h = `<span>🧳 <b>${P.delivered}/${CF.bags}</b> bags</span>${P.restarts ? `<span>↺ ${P.restarts}</span>` : ''}`; if (hud.innerHTML !== h) hud.innerHTML = h; };
+      const renderHud = () => { const h = `<span>🧳 <b>${P.delivered}/${NB}</b> bags</span>${P.restarts ? `<span>↺ ${P.restarts}</span>` : ''}`; if (hud.innerHTML !== h) hud.innerHTML = h; };
 
       // ---- simulation: one square per tick, smooth movement between ticks
       const say = (t, cls = '') => setStatus(st, t, cls);
@@ -4604,8 +5566,11 @@
       };
       const addBag = r => {
         const g = el('g', { class: 'bag' }, gBags); drawBag(r.color, g);
-        return { t0: tick, next: tick + 3, at: r.spawn, from: r.spawn, enter: true, dir: inward(r.spawn), color: r.color, name: PAL[r.color][2], g, via: false, state: 'roll', age: 0 };
+        // train bags roll in out of the chute; everyone else is already sitting on the belts
+        const at = r.train ? r.spawn : r.start;
+        return { t0: tick, next: tick + 3, at, from: at, enter: !!r.train, dir: r.startDir, color: r.color, name: PAL[r.color][2], g, via: false, state: 'roll', age: 0 };
       };
+      const placeField = () => routes.forEach(r => { if (!r.train) bags.push(addBag(r)); });
       // the next bag waiting at each entrance
       const renderPreview = () => previews.forEach((g, k) => {
         const i = routes.findIndex((r, j) => r.spawn === k && T[j] > tick), was = g.dataset.c ?? '';
@@ -4614,13 +5579,9 @@
         g.dataset.c = now; g.replaceChildren();
         if (now === '') { g.removeAttribute('aria-label'); return; }
         drawBag(+now, g);
-        const n = rank(i);
-        if (!RUSH) { // in Rush they all go together, so no order numbers
-          const b = el('g', { transform: 'translate(12 -12)' }, g);
-          el('circle', { r: 9, class: 'ol badge' }, b);
-          el('text', { y: 4.6, 'text-anchor': 'middle', 'font-size': 13, class: 'badgen' }, b).textContent = n;
-        }
-        g.setAttribute('aria-label', `Bag ${n} of ${CF.bags}, ${PAL[+now][2]}, waits at this entrance`);
+        const left = routes.filter((r, j) => r.spawn === k && T[j] > tick).length;
+        if (left > 1) { const b = el('g', { transform: 'translate(13 -13)' }, g); el('circle', { r: 10, class: 'ol badge' }, b); el('text', { y: 4.8, 'text-anchor': 'middle', 'font-size': 13, class: 'badgen' }, b).textContent = `×${left}`; }
+        g.setAttribute('aria-label', `Entry chute: next bag is ${PAL[+now][2]}, ${left} still to come`);
       });
       const fail = why => {
         phase = 'over'; save(); setGo(); renderPreview();
@@ -4667,12 +5628,12 @@
             P.delivered++; save(); say(`${b.name[0].toUpperCase()}${b.name.slice(1)} bag delivered.`, 'win');
             continue;
           }
-          if (cv.t === 'tp') { b.at = pair.get(v); b.via = true; b.tpFrom = v; continue; }
-          b.at = v; b.next = tick + COST(v);
+          if (cv.t === 'tp') { b.at = pair.get(v); b.via = true; b.tpFrom = v; b.next = tick + SEG(b.from, b.at); continue; }
+          b.at = v; b.next = tick + SEG(b.from, v);
         }
-        routes.forEach((r, i) => { if (T[i] === tick) bags.push(addBag(r)); }); // new bags appear after everyone else has moved
+        routes.forEach((r, i) => { if (r.train && T[i] === tick) bags.push(addBag(r)); }); // the next train bag drops out of the chute
         renderPreview();
-        if (P.delivered === CF.bags) { phase = 'over'; P.started = false; save(); setGo(); say(`All ${CF.bags} bags in the right bins!`, 'win'); finish(id, true); }
+        if (P.delivered === NB) { phase = 'over'; P.started = false; save(); setGo(); say(`All ${NB} bags in the right bins!`, 'win'); finish(id, true); }
       };
       const place = () => {
         bags.forEach(b => {
@@ -4728,7 +5689,7 @@
       const run = () => { phase = 'run'; last = 0; if (!P.started) { P.started = true; save(); } setGo(); say(isRush() ? '⚡ Rush! The bags are already rolling. Fix the route before they reach the wrong place.' : 'Bags are rolling. Flip rotators, belts, directors and pushers as they come.'); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); };
       goBtn.addEventListener('click', e => { if (R.done || e.detail > 1) return; if (phase === 'plan' || phase === 'paused') run(); else if (phase === 'run') { phase = 'paused'; setGo(); say('Paused. You can still turn belts.'); } });
       const reset = () => {
-        cancelAnimationFrame(raf); bags.forEach(b => b.g.remove()); bags = []; tick = 0; stepFrac = 0;
+        cancelAnimationFrame(raf); bags.forEach(b => b.g.remove()); bags = []; tick = 0; stepFrac = 0; placeField();
         controls.forEach((ct, i) => ct.set(START[i])); cell.forEach(c => { if (c.g) c.g.classList.remove('bad', 'pulse'); });
         applyHinted();
         P.delivered = 0; phase = 'plan'; setGo(); place(); renderHud(); renderPreview();
@@ -4769,11 +5730,12 @@
           say(`Hint: ${what}.`);
         },
       };
-      GBY[id].strip = r => HINT.repeat(r.hints) + '🟥'.repeat(Math.min(10, r.prog.restarts ?? 0)) + (r.ok ? '🟩'.repeat(CF.bags) : '');
+      GBY[id].strip = r => HINT.repeat(r.hints) + '🟥'.repeat(Math.min(10, r.prog.restarts ?? 0)) + (r.ok ? '🟩'.repeat(NB) : '');
       if (!R.done) applyHinted();
-      if (R.done) { phase = 'over'; P.delivered = CF.bags; say(`All ${CF.bags} bags in the right bins!`, 'win'); }
+      if (R.done) { phase = 'over'; P.delivered = NB; say(`All ${NB} bags in the right bins!`, 'win'); }
       else if (reloaded) say(`The page reloaded after a run had started, so it counted as a restart (−10). Set up the belts and press Play.`);
       else say(P.restarts ? `Ready. Restarts so far: ${P.restarts} (−10 each). Set up the belts and press Play.` : 'Set up the blue pieces, then press Play. You can keep changing them while the bags roll.');
+      if (!R.done) placeField();
       setGo(); place(); renderHud(); renderPreview();
       if (!R.done) autoStart();
     };
@@ -5002,7 +5964,7 @@
 
     // ================= Unlimited play =================
     const MOUNT = { rb: (...a) => mountRB(...a), cs: (...a) => mountCS(...a), ls: (...a) => mountLS(...a), mm: (...a) => mountMM(...a), oo: (...a) => mountOO(...a), bg: (...a) => mountBG(...a) };
-    const POOL = { rb: L => RB_BANK[L].length, mm: L => MM_BANK[L].length, cs: () => 100, ls: () => 100, oo: () => 100, bg: () => 100 };
+    const POOL = { rb: L => RB_BANK[L].length, mm: L => MM_BANK[L].length, cs: () => 100, ls: () => 100, oo: () => 100, bg: L => BG_LEVELS[L].length };
     const startUnl = (g, fresh) => {
       const u = unl(g), base = GBY[g].base;
       if (!fresh && u.r && u.L !== undefined && $(`#v-${g}`)) { show(g); return; }
